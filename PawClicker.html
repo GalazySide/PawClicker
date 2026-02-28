@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paw Paw Paradise</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink:#ff85a1; --pink-light:#ffc5d3; --pink-pale:#fff0f5;
+  --cream:#fffaf3; --gold:#f4a435; --soft-green:#7ec8a0;
+  --purple:#b39ddb; --dark:#2a1f3d; --text:#3d2c2c; --muted:#9e8585;
+  --panel:rgba(255,255,255,0.85); --shadow:0 4px 24px rgba(180,100,120,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background 8s ease,filter 10s ease;position:relative}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%,rgba(255,197,211,.4) 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(255,243,224,.6) 0%,transparent 50%),radial-gradient(ellipse at 60% 10%,rgba(179,157,219,.2) 0%,transparent 40%);pointer-events:none;z-index:0;transition:background 8s ease}
+#game{display:grid;grid-template-columns:290px 1fr 270px;grid-template-rows:60px 1fr;height:100vh;position:relative;z-index:1}
+/* TOPBAR */
+#topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(255,255,255,.7);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,133,161,.2);z-index:100}
+#title-logo{font-size:1.2rem;font-weight:900;color:var(--pink);letter-spacing:-.02em;cursor:default;user-select:none}
+#topbar-stats{display:flex;gap:20px;font-size:.78rem;font-weight:700;color:var(--muted)}
+#topbar-stats span{color:var(--text)}
+#topbar-tabs{display:flex;gap:3px}
+.tab-btn{padding:5px 11px;border:none;background:transparent;border-radius:20px;font-family:inherit;font-size:.76rem;font-weight:700;cursor:pointer;color:var(--muted);transition:all .2s}
+.tab-btn:hover,.tab-btn.active{background:var(--pink-pale);color:var(--pink)}
+/* PANELS */
+#left-panel,#right-panel{background:var(--panel);backdrop-filter:blur(8px);overflow-y:auto;padding:10px 7px;display:flex;flex-direction:column;gap:4px}
+#left-panel{border-right:1px solid rgba(255,133,161,.1)}
+#right-panel{border-left:1px solid rgba(255,133,161,.1)}
+#left-panel::-webkit-scrollbar,#right-panel::-webkit-scrollbar{width:4px}
+#left-panel::-webkit-scrollbar-thumb,#right-panel::-webkit-scrollbar-thumb{background:var(--pink-light);border-radius:2px}
+.panel-title{font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:6px 8px 3px}
+/* UPGRADES */
+.upgrade-btn{display:flex;align-items:center;gap:9px;padding:9px 10px;border:2px solid transparent;border-radius:13px;background:rgba(255,255,255,.6);cursor:pointer;transition:all .18s;text-align:left;width:100%;font-family:inherit;position:relative;overflow:hidden}
+.upgrade-btn:hover:not(:disabled){border-color:var(--pink-light);background:#fff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,133,161,.2)}
+.upgrade-btn:disabled{opacity:.4;cursor:not-allowed}
+.upgrade-btn.purchased{background:linear-gradient(135deg,rgba(255,197,211,.3),rgba(255,243,224,.3));border-color:rgba(255,133,161,.3)}
+.upgrade-btn.purchased::after{content:'✓';position:absolute;right:9px;color:var(--soft-green);font-size:.85rem}
+.upgrade-icon{font-size:1.3rem;flex-shrink:0}
+.upgrade-info{flex:1;min-width:0}
+.upgrade-name{font-size:.76rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upgrade-cost{font-size:.68rem;color:var(--gold);font-weight:700}
+.upgrade-desc{font-size:.65rem;color:var(--muted);font-style:italic;line-height:1.3;margin-top:2px;font-family:'Crimson Text',serif}
+/* BUILDINGS */
+.building-row{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:11px;background:rgba(255,255,255,.5);border:1px solid transparent;cursor:pointer;transition:all .18s;position:relative}
+.building-row:hover:not(.cant-afford){background:#fff;border-color:rgba(255,133,161,.25);transform:translateX(-2px)}
+.building-row.cant-afford{opacity:.5}
+.building-icon{font-size:1.4rem;flex-shrink:0}
+.building-info{flex:1;min-width:0}
+.building-name{font-size:.76rem;font-weight:800}
+.building-sub{font-size:.64rem;color:var(--muted);font-weight:600}
+.building-pps{color:var(--soft-green)}
+.building-desc-text{font-size:.63rem;color:var(--muted);font-family:'Crimson Text',serif;font-style:italic;line-height:1.3;margin-top:1px}
+.building-cost{font-size:.7rem;font-weight:800;color:var(--gold);white-space:nowrap}
+.b-count{position:absolute;top:-5px;right:-5px;background:var(--pink);color:#fff;font-size:.62rem;font-weight:900;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+/* CENTER */
+#center-panel{display:flex;flex-direction:column;align-items:center;padding:16px 20px;gap:13px;overflow-y:auto}
+#paw-count{font-size:2.3rem;font-weight:900;color:var(--dark);letter-spacing:-.03em;line-height:1;text-align:center;transition:color 4s ease}
+#pps-display{font-size:.83rem;color:var(--muted);font-weight:600;margin-top:3px;text-align:center}
+#combo-bar{display:flex;align-items:center;gap:8px;padding:5px 15px;background:rgba(255,255,255,.6);border-radius:20px;border:1px solid rgba(255,133,161,.2);font-size:.78rem;font-weight:700;min-width:190px;justify-content:center}
+#combo-value{color:var(--pink);font-size:.95rem}
+#combo-timer-bar{height:3px;width:75px;background:rgba(255,133,161,.15);border-radius:2px;overflow:hidden}
+#combo-timer-fill{height:100%;background:linear-gradient(90deg,var(--pink),var(--gold));border-radius:2px;transition:width .1s linear}
+#paw-container{position:relative;display:flex;align-items:center;justify-content:center;width:210px;height:210px;cursor:pointer;user-select:none;-webkit-user-select:none}
+#paw-glow{position:absolute;inset:-30px;border-radius:50%;background:radial-gradient(circle,rgba(255,133,161,.25) 0%,transparent 70%);animation:glow-pulse 3s ease-in-out infinite;pointer-events:none}
+@keyframes glow-pulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+#main-paw{font-size:8.5rem;line-height:1;display:block;filter:drop-shadow(0 8px 20px rgba(255,133,161,.35));animation:idle-breathe 4s ease-in-out infinite;position:relative;z-index:2}
+@keyframes idle-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+#paw-container.clicking #main-paw{animation:none;transform:scale(.88);filter:drop-shadow(0 4px 12px rgba(255,133,161,.5))}
+.float-particle{position:fixed;font-size:.95rem;font-weight:800;color:var(--pink);pointer-events:none;z-index:9999;animation:float-up .8s ease-out forwards}
+@keyframes float-up{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-55px) scale(.7)}}
+#currency-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.currency-chip{display:flex;align-items:center;gap:5px;padding:4px 11px;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.07);border-radius:18px;font-size:.76rem;font-weight:700}
+.c-val{color:var(--text)}.c-label{color:var(--muted);font-weight:600}
+#message-area{min-height:36px;text-align:center;font-size:.8rem;color:var(--muted);font-family:'Crimson Text',serif;font-style:italic;transition:color 4s ease,opacity .4s ease;max-width:330px;line-height:1.4}
+#npc-area{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:360px}
+.npc-chip{display:flex;align-items:center;gap:6px;padding:6px 11px;background:rgba(255,255,255,.7);border:1px solid rgba(255,133,161,.2);border-radius:14px;cursor:pointer;transition:all .18s;font-size:.78rem;font-weight:700}
+.npc-chip:hover{background:#fff;transform:translateY(-2px);box-shadow:var(--shadow)}
+.npc-icon{font-size:1.2rem}
+.npc-speech{position:fixed;background:#fff;border:2px solid var(--pink-light);border-radius:16px;padding:12px 15px;max-width:250px;font-size:.88rem;line-height:1.5;box-shadow:0 8px 30px rgba(180,100,120,.2);z-index:1000;font-family:'Crimson Text',serif;animation:speech-in .2s ease}
+@keyframes speech-in{from{opacity:0;transform:scale(.9) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.npc-speech-name{font-family:'Nunito',sans-serif;font-weight:800;color:var(--pink);font-size:.72rem;margin-bottom:5px}
+.npc-speech-close{position:absolute;top:7px;right:9px;background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--muted)}
+#prestige-btn{padding:9px 26px;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;border:none;border-radius:22px;font-family:inherit;font-size:.86rem;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(179,157,219,.4);transition:all .2s;display:none}
+#prestige-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(179,157,219,.5)}
+/* TAB MODAL */
+#tab-content{display:none;position:fixed;top:60px;left:0;right:0;bottom:0;background:rgba(42,31,61,.5);backdrop-filter:blur(8px);z-index:200;align-items:center;justify-content:center}
+#tab-content.active{display:flex}
+.tab-modal{background:#fff;border-radius:22px;padding:26px;max-width:640px;width:93%;max-height:78vh;overflow-y:auto;box-shadow:0 20px 60px rgba(42,31,61,.3)}
+.tab-modal h2{font-size:1.25rem;font-weight:900;color:var(--dark);margin-bottom:14px}
+.close-modal{float:right;background:none;border:none;font-size:1.15rem;cursor:pointer;color:var(--muted);margin-top:-3px}
+/* SPECIES */
+.species-card{border:1.5px solid rgba(255,133,161,.2);border-radius:14px;padding:13px;background:rgba(255,240,245,.3);transition:all .2s;cursor:pointer;margin-bottom:8px}
+.species-card:hover:not(.locked){border-color:var(--pink-light);background:rgba(255,240,245,.6)}
+.species-card.locked{opacity:.4;cursor:not-allowed}
+.species-card h3{font-size:.88rem;font-weight:800;display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.species-card p{font-size:.73rem;color:var(--muted);font-family:'Crimson Text',serif;font-style:italic;line-height:1.4}
+.species-bonus{font-size:.7rem;font-weight:700;color:var(--soft-green);margin-top:5px}
+/* REALMS */
+.realm-card{border:1.5px solid rgba(179,157,219,.25);border-radius:14px;padding:13px;background:rgba(245,240,255,.3);cursor:pointer;transition:all .2s;margin-bottom:8px}
+.realm-card:hover:not(.locked){border-color:var(--purple);background:rgba(245,240,255,.6)}
+.realm-card.locked{opacity:.4;cursor:not-allowed}
+.realm-card h3{font-size:.88rem;font-weight:800;margin-bottom:3px;display:flex;align-items:center;gap:7px}
+.realm-card p{font-size:.73rem;color:var(--muted);font-family:'Crimson Text',serif;font-style:italic;line-height:1.4}
+.realm-reward{font-size:.7rem;font-weight:700;color:var(--purple);margin-top:5px}
+/* CODEX */
+.codex-entry{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(0,0,0,.06)}
+.codex-entry h4{font-size:.86rem;font-weight:800;margin-bottom:3px}
+.codex-entry p{font-size:.8rem;color:var(--text);font-family:'Crimson Text',serif;line-height:1.55}
+/* ACHIEVEMENTS */
+.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.ach-item{padding:9px 11px;border-radius:11px;border:1px solid rgba(0,0,0,.06);background:var(--pink-pale)}
+.ach-item.locked{opacity:.3;filter:grayscale(1)}
+.ach-item .ai-name{font-size:.76rem;font-weight:800}
+.ach-item .ai-desc{font-size:.66rem;color:var(--muted);font-family:'Crimson Text',serif;font-style:italic;margin-top:2px;line-height:1.3}
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.stat-item{padding:9px;background:var(--pink-pale);border-radius:10px}
+.stat-item .s-label{font-size:.63rem;text-transform:uppercase;font-weight:800;letter-spacing:.08em;color:var(--muted)}
+.stat-item .s-val{font-size:.88rem;font-weight:800;color:var(--dark);margin-top:2px}
+/* PRESTIGE FLASH */
+#prestige-flash{position:fixed;inset:0;background:#fff;z-index:9998;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+#prestige-flash.active{display:flex}
+#prestige-msg{font-family:'Crimson Text',serif;font-size:1.55rem;color:var(--dark);text-align:center;max-width:380px;line-height:1.5}
+/* REALM OVERLAY */
+#realm-overlay{position:fixed;inset:0;background:rgba(42,31,61,.9);z-index:5001;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px}
+#realm-overlay.active{display:flex}
+#realm-overlay h2{font-size:1.7rem;font-weight:900;color:#fff}
+#realm-overlay p{font-size:.95rem;color:rgba(255,255,255,.7);font-family:'Crimson Text',serif;font-style:italic;max-width:380px;text-align:center}
+#realm-leave-btn{padding:9px 26px;background:var(--purple);color:#fff;border:none;border-radius:22px;font-family:inherit;font-weight:800;font-size:.88rem;cursor:pointer}
+/* LORE TOAST */
+#lore-toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--dark);color:rgba(255,255,255,.85);padding:11px 18px;border-radius:11px;font-family:'Crimson Text',serif;font-size:.88rem;max-width:360px;text-align:center;line-height:1.5;z-index:5000;transition:transform .4s ease,opacity .4s ease;opacity:0;pointer-events:none}
+#lore-toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+/* ACHIEVEMENT NOTIFICATIONS */
+#ach-container{position:fixed;top:70px;right:16px;display:flex;flex-direction:column;gap:9px;z-index:5000;pointer-events:none}
+.ach-notif{width:285px;background:#fff;border-radius:13px;padding:0;box-shadow:0 8px 32px rgba(42,31,61,.18);overflow:hidden;pointer-events:all;position:relative;transform:translateX(310px);opacity:0;transition:transform .45s cubic-bezier(.34,1.56,.64,1),opacity .3s ease}
+.ach-notif.visible{transform:translateX(0);opacity:1}
+.ach-notif.hiding{transform:translateX(310px);opacity:0;transition:transform .3s ease,opacity .25s ease}
+.ach-notif-bar{height:3px;background:linear-gradient(90deg,var(--gold),var(--pink));width:100%;transform-origin:left;animation:shrink-bar var(--dur,4s) linear forwards}
+@keyframes shrink-bar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.ach-notif-body{display:flex;align-items:center;gap:11px;padding:10px 30px 12px 13px}
+.ach-notif-icon{font-size:1.7rem;line-height:1;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(255,133,161,.4))}
+.ach-notif-text{flex:1;min-width:0}
+.ach-notif-label{font-size:.58rem;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px}
+.ach-notif-name{font-size:.86rem;font-weight:900;color:var(--dark);line-height:1.2}
+.ach-notif-desc{font-size:.71rem;color:var(--muted);font-family:'Crimson Text',serif;font-style:italic;margin-top:2px;line-height:1.35}
+.ach-notif-close{position:absolute;top:7px;right:9px;background:none;border:none;cursor:pointer;font-size:.73rem;color:var(--muted);padding:2px 4px;border-radius:4px;transition:background .15s}
+.ach-notif-close:hover{background:var(--pink-pale)}
+/* LOADING */
+#loading-overlay{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;transition:opacity .6s ease}
+#loading-msg{font-family:'Crimson Text',serif;font-size:1.15rem;color:var(--muted);font-style:italic;text-align:center}
+.loading-paw{font-size:2.4rem;animation:loading-spin 2s linear infinite}
+@keyframes loading-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+/* CORRUPTION EFFECTS */
+body.amb-warm #main-paw{animation:idle-breathe 4s ease-in-out infinite,linger 12s ease-in-out infinite}
+@keyframes linger{0%,90%,100%{filter:drop-shadow(0 8px 20px rgba(255,133,161,.35))}95%{filter:drop-shadow(0 8px 20px rgba(255,133,161,.7)) brightness(1.05)}}
+body.amb-settling #main-paw{animation:idle-breathe-slow 5s ease-in-out infinite}
+@keyframes idle-breathe-slow{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+body.amb-deep #main-paw{animation:idle-breathe-slow 5s ease-in-out infinite,subtle-twitch 18s ease-in-out infinite}
+@keyframes subtle-twitch{0%,96%,100%{transform:scale(1) rotate(0)}97%{transform:scale(1.005) rotate(.4deg)}98.5%{transform:scale(.998) rotate(-.3deg)}}
+body.amb-terminal #main-paw{animation:breathe-terminal 6s ease-in-out infinite,twitch-terminal 10s ease-in-out infinite}
+@keyframes breathe-terminal{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
+@keyframes twitch-terminal{0%,93%,100%{transform:scale(1) rotate(0) translateX(0)}94%{transform:scale(1.01) rotate(.5deg) translateX(1px)}96%{transform:scale(.997) rotate(-.4deg) translateX(-1px)}98%{transform:scale(1.003) rotate(.2deg) translateX(.5px)}}
+body.amb-deep{filter:saturate(.95)}
+body.amb-irreversible{filter:saturate(.88) brightness(.97)}
+body.amb-terminal{filter:saturate(.78) brightness(.94)}
+/* ADMIN PANEL */
+#admin-panel{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:none;align-items:center;justify-content:center}
+#admin-panel.active{display:flex}
+.admin-box{background:#111;border:1px solid #333;border-radius:16px;padding:28px;width:460px;max-width:95vw;color:#eee;font-family:'Courier New',monospace}
+.admin-box h2{color:#ff85a1;font-size:1.1rem;margin-bottom:4px;font-family:'Nunito',sans-serif;font-weight:900}
+.admin-box .admin-sub{font-size:.72rem;color:#666;margin-bottom:20px}
+.admin-row{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.admin-row label{font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.06em}
+.admin-controls{display:flex;gap:7px;align-items:center}
+.admin-input{background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#eee;padding:8px 12px;font-family:'Courier New',monospace;font-size:.88rem;flex:1;outline:none}
+.admin-input:focus{border-color:#ff85a1}
+.admin-btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:.8rem;font-weight:700;transition:all .15s}
+.admin-btn-pink{background:#ff85a1;color:#fff}.admin-btn-pink:hover{background:#ff6d8d}
+.admin-btn-gray{background:#333;color:#eee}.admin-btn-gray:hover{background:#444}
+.admin-btn-red{background:#8b1a1a;color:#eee}.admin-btn-red:hover{background:#a02020}
+.admin-divider{border:none;border-top:1px solid #222;margin:16px 0}
+.admin-section-title{font-size:.7rem;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.admin-currency-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.admin-currency-item{display:flex;flex-direction:column;gap:4px}
+.admin-currency-item label{font-size:.68rem;color:#888}
+.admin-note{font-size:.68rem;color:#444;font-style:italic;margin-top:8px}
+.admin-close{position:absolute;top:12px;right:16px;background:none;border:none;color:#666;font-size:1.1rem;cursor:pointer}
+.admin-close:hover{color:#eee}
+/* ASCENSION TREE modal tab */
+.asc-tree-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.asc-node{border:1.5px solid rgba(179,157,219,.3);border-radius:13px;padding:11px;background:rgba(245,240,255,.4);cursor:pointer;transition:all .2s}
+.asc-node:hover:not(.purchased):not(.locked){border-color:var(--purple);background:rgba(245,240,255,.7)}
+.asc-node.purchased{background:rgba(179,157,219,.2);border-color:var(--purple)}
+.asc-node.locked{opacity:.35;cursor:not-allowed}
+.asc-node h4{font-size:.8rem;font-weight:800;margin-bottom:3px}
+.asc-node p{font-size:.68rem;color:var(--muted);font-family:'Crimson Text',serif;font-style:italic;line-height:1.35}
+.asc-node .asc-cost{font-size:.7rem;font-weight:700;color:#b39ddb;margin-top:4px}
+/* SYNERGY PANEL */
+.synergy-item{padding:10px 12px;border-radius:11px;border:1px solid rgba(126,200,160,.25);background:rgba(230,250,240,.4);margin-bottom:7px}
+.synergy-item h4{font-size:.8rem;font-weight:800;color:#3a7a55;margin-bottom:2px}
+.synergy-item p{font-size:.7rem;color:var(--muted);font-family:'Crimson Text',serif;font-style:italic;line-height:1.35}
+.synergy-item.active{border-color:var(--soft-green);background:rgba(200,245,220,.5)}
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loading-overlay">
+  <div class="loading-paw">🐾</div>
+  <div id="loading-msg">Fluffing the cushions...</div>
+</div>
+<!-- PRESTIGE FLASH -->
+<div id="prestige-flash">
+  <div style="font-size:3.8rem">✨</div>
+  <div id="prestige-msg">It's okay. Starting over is part of it.<br><span style="font-size:.95rem;opacity:.6">The important things stay.</span></div>
+</div>
+<!-- LORE TOAST -->
+<div id="lore-toast"></div>
+<!-- ACHIEVEMENT NOTIFICATIONS -->
+<div id="ach-container"></div>
+<!-- NPC SPEECH -->
+<div id="npc-speech-popup" class="npc-speech hidden">
+  <div class="npc-speech-name" id="npc-speech-name"></div>
+  <button class="npc-speech-close" onclick="closeNpcSpeech()">✕</button>
+  <div id="npc-speech-text"></div>
+</div>
+<!-- REALM OVERLAY -->
+<div id="realm-overlay">
+  <div style="font-size:2.8rem" id="realm-ol-icon">🌸</div>
+  <h2 id="realm-ol-name">Cozy Paw Village</h2>
+  <p id="realm-ol-desc">A warm place full of friendly paws.</p>
+  <p style="color:rgba(255,255,255,.5);font-size:.78rem" id="realm-ol-time"></p>
+  <button id="realm-leave-btn" onclick="leaveRealm()">Leave Realm</button>
+</div>
+<!-- TAB MODAL -->
+<div id="tab-content">
+  <div class="tab-modal">
+    <button class="close-modal" onclick="closeTab()">✕</button>
+    <h2 id="tab-title">Tab</h2>
+    <div id="tab-body"></div>
+  </div>
+</div>
+<!-- ADMIN PANEL -->
+<div id="admin-panel">
+  <div class="admin-box" style="position:relative">
+    <button class="admin-close" onclick="closeAdmin()">✕</button>
+    <h2>🐾 Admin Console</h2>
+    <div class="admin-sub">Developer access. Changes take effect immediately.</div>
+    <hr class="admin-divider">
+    <div class="admin-section-title">💰 Add Currency</div>
+    <div class="admin-currency-grid">
+      <div class="admin-currency-item">
+        <label>🐾 Paws</label>
+        <div class="admin-controls">
+          <input class="admin-input" id="adm-paws" type="number" value="1000000" placeholder="amount">
+          <button class="admin-btn admin-btn-pink" onclick="adminAdd('paws')">Add</button>
+        </div>
+      </div>
+      <div class="admin-currency-item">
+        <label>💖 Affection</label>
+        <div class="admin-controls">
+          <input class="admin-input" id="adm-affection" type="number" value="10000" placeholder="amount">
+          <button class="admin-btn admin-btn-pink" onclick="adminAdd('affection')">Add</button>
+        </div>
+      </div>
+      <div class="admin-currency-item">
+        <label>✨ Fluff</label>
+        <div class="admin-controls">
+          <input class="admin-input" id="adm-fluff" type="number" value="1000" placeholder="amount">
+          <button class="admin-btn admin-btn-pink" onclick="adminAdd('fluff')">Add</button>
+        </div>
+      </div>
+      <div class="admin-currency-item">
+        <label>🌙 Moon Essence</label>
+        <div class="admin-controls">
+          <input class="admin-input" id="adm-moonEssence" type="number" value="500" placeholder="amount">
+          <button class="admin-btn admin-btn-pink" onclick="adminAdd('moonEssence')">Add</button>
+        </div>
+      </div>
+      <div class="admin-currency-item">
+        <label>🔥 Ascension Energy</label>
+        <div class="admin-controls">
+          <input class="admin-input" id="adm-ascensionEnergy" type="number" value="10" placeholder="amount">
+          <button class="admin-btn admin-btn-pink" onclick="adminAdd('ascensionEnergy')">Add</button>
+        </div>
+      </div>
+      <div class="admin-currency-item">
+        <label>⚡ Set PPS Bonus</label>
+        <div class="admin-controls">
+          <input class="admin-input" id="adm-ppsmult" type="number" value="2" placeholder="multiplier">
+          <button class="admin-btn admin-btn-pink" onclick="adminPpsMult()">×Apply</button>
+        </div>
+      </div>
+    </div>
+    <hr class="admin-divider">
+    <div class="admin-section-title">🔧 Tools</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="admin-btn admin-btn-gray" onclick="adminUnlockAll()">Unlock All Species</button>
+      <button class="admin-btn admin-btn-gray" onclick="adminMaxBuildings()">+50 All Buildings</button>
+      <button class="admin-btn admin-btn-gray" onclick="adminAllUpgrades()">All Upgrades</button>
+      <button class="admin-btn admin-btn-gray" onclick="adminAllRealms()">Unlock All Realms</button>
+      <button class="admin-btn admin-btn-gray" onclick="adminPrestige()">+1 Prestige</button>
+      <button class="admin-btn admin-btn-red" onclick="adminWipeCorruption()">Reset Corruption</button>
+      <button class="admin-btn admin-btn-red" onclick="adminHardReset()">HARD RESET</button>
+    </div>
+    <div class="admin-note">Tip: Type the konami code (↑↑↓↓←→←→BA) anywhere to open this panel.</div>
+  </div>
+</div>
+
+<!-- MAIN GAME -->
+<div id="game">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div id="title-logo">🐾 Paw Paw Paradise</div>
+    <div id="topbar-stats">
+      <div>PPS: <span id="stat-pps">0</span></div>
+      <div>Prestige: <span id="stat-prestige">0</span></div>
+      <div>Affection: <span id="stat-aff">0</span></div>
+      <div>Fluff: <span id="stat-fluff">0</span></div>
+    </div>
+    <div id="topbar-tabs">
+      <button class="tab-btn" onclick="openTab('species')">🐾 Species</button>
+      <button class="tab-btn" onclick="openTab('ascension')">🔥 Ascension</button>
+      <button class="tab-btn" onclick="openTab('synergies')">🔗 Synergies</button>
+      <button class="tab-btn" onclick="openTab('realms')">🌙 Realms</button>
+      <button class="tab-btn" onclick="openTab('codex')">📖 Codex</button>
+      <button class="tab-btn" onclick="openTab('achievements')">🏆 Achievements</button>
+      <button class="tab-btn" onclick="openTab('stats')">📊 Stats</button>
+    </div>
+  </div>
+  <!-- LEFT PANEL — UPGRADES -->
+  <div id="left-panel">
+    <div class="panel-title">Upgrades</div>
+    <div id="upgrades-list"></div>
+  </div>
+  <!-- CENTER -->
+  <div id="center-panel">
+    <div>
+      <div id="paw-count">0 🐾</div>
+      <div id="pps-display">0 paws per second</div>
+    </div>
+    <div id="combo-bar">
+      <span>combo</span>
+      <span id="combo-value">×1</span>
+      <div id="combo-timer-bar"><div id="combo-timer-fill" style="width:100%"></div></div>
+      <span id="combo-bonus-label" style="font-size:.68rem;color:var(--gold)"></span>
+    </div>
+    <div id="paw-container">
+      <div id="paw-glow"></div>
+      <span id="main-paw">🐾</span>
+    </div>
+    <div id="currency-row"></div>
+    <div id="message-area">Click the paw to begin! 🌸</div>
+    <div id="npc-area"></div>
+    <div id="active-effects-bar" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:340px"></div>
+    <button id="prestige-btn" onclick="doPrestige()">✨ Prestige Reset</button>
+  </div>
+  <!-- RIGHT PANEL — BUILDINGS -->
+  <div id="right-panel">
+    <div class="panel-title">Buildings</div>
+    <div id="buildings-list"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🐾 PAW PAW PARADISE — FULL GAME ENGINE v2
+// ═══════════════════════════════════════════════════════════════
+
+// ── NUMBER FORMATTING ──
+const SUFFIXES=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','UDc','DDc','TDc','QaDc','QiDc','SxDc','SpDc','OcDc','NoDc','Vg'];
+function fmt(n){
+  if(isNaN(n)||!isFinite(n)) return '0';
+  if(n<0) return '-'+fmt(-n);
+  if(n<1000) return Math.floor(n).toString();
+  const tier=Math.floor(Math.log10(Math.abs(n))/3);
+  if(tier>=SUFFIXES.length) return n.toExponential(2);
+  const scaled=n/Math.pow(1000,tier);
+  return (scaled>=100?Math.floor(scaled):scaled.toFixed(scaled>=10?1:2))+SUFFIXES[tier];
+}
+function fmtDec(n,d=1){
+  if(n<1000) return n.toFixed(d);
+  return fmt(n);
+}
+
+// ── GAME STATE ──
+const G={
+  paws:0,lifetimePaws:0,
+  affection:0,fluff:0,moonEssence:0,starDust:0,voidCrystals:0,ascensionEnergy:0,
+  clickPower:1,basePps:0,pps:0,
+  combo:1,comboTimer:0,comboMax:3.0,
+  prestigeCount:0,totalClicks:0,sessionTime:0,
+  corruption:0,lastClick:0,lastActive:Date.now(),idleMinutes:0,
+  buildings:{},upgrades:{},achievements:{},species:{},unlockedRealms:{},
+  realmActive:null,realmTimer:0,realmBonus:1,
+  prestigeMultiplier:1,clickMultiplier:1,
+  affGenRate:0,fluffGenRate:0,moonGenRate:0,starDustGenRate:0,
+  activeEffects:[],
+  critChance:0.02,critMult:7,
+  foxTrickActive:false,foxTrickTimer:0,
+  globalMultiplier:1,
+  synergyMults:{},
+  loopVisits:0,
+};
+
+// ── BUILDINGS ──
+const BUILDINGS=[
+  {id:'burrow',name:'Cozy Burrow',icon:'🏠',basePps:.1,baseCost:15,costMult:1.15,
+    desc:['A warm home for small paws. Snug and lovely.','A home that has been occupied for a very long time. The warmth is structural now.']},
+  {id:'mill',name:'Paw Mill',icon:'⚙️',basePps:.5,baseCost:100,costMult:1.15,
+    desc:['Little gears turn, Paws churn out. Delightful!','The gears do not require your management. They have not for some time.']},
+  {id:'workshop',name:'Furry Workshop',icon:'🔨',basePps:2,baseCost:1100,costMult:1.15,
+    desc:['Skilled paws crafting Paws. Meta, but charming!','The crafting continues. The workers are consistent.']},
+  {id:'bakery',name:'Paw Bakery',icon:'🥐',basePps:5,baseCost:6000,costMult:1.15,
+    desc:['Fresh-baked paw prints every morning! Smells amazing.','The ovens have not cooled. They will not cool.']},
+  {id:'garden',name:'Whisker Garden',icon:'🌿',basePps:12,baseCost:35000,costMult:1.15,
+    desc:['Grown from sun, soil, and love. And paws.','Growing. Always growing. Regardless.']},
+  {id:'library',name:'Paw Library',icon:'📚',basePps:30,baseCost:200000,costMult:1.15,
+    desc:['Knowledge is paws. Paws are knowledge. Books everywhere.','The books write themselves now. The content has changed.']},
+  {id:'shrine',name:'Moon Shrine',icon:'🌙',basePps:75,baseCost:1200000,costMult:1.15,
+    desc:['Bathed in moonlight, generating quietly.','The light it bathes in is not moonlight.']},
+  {id:'observatory',name:'Star Observatory',icon:'🔭',basePps:180,baseCost:7000000,costMult:1.15,
+    desc:['Watching the stars for patterns in the paws.','The stars have been watching back. They noted your arrival.']},
+  {id:'wolfden',name:'Wolf Den',icon:'🐺',basePps:400,baseCost:40000000,costMult:1.15,
+    desc:['The pack works in shifts. No shift is ever empty.','The pack works without shifts now. There is no time when work is not happening.']},
+  {id:'crystalcave',name:'Crystal Cave',icon:'💎',basePps:900,baseCost:200000000,costMult:1.15,
+    desc:['Star Dust crystallizes here, humming with ancient power.','The crystals resonate with something deep. You can feel it in your clicks.']},
+  {id:'dragonlair',name:'Dragon Lair',icon:'🐉',basePps:2000,baseCost:1200000000,costMult:1.15,
+    desc:["Dragons are generous with their flame. Mostly.","The dragon has not moved. It has been watching."]},
+  {id:'nexus',name:'Paw Nexus',icon:'🌀',basePps:5000,baseCost:8000000000,costMult:1.15,
+    desc:['A convergence point for all paw energy. Magnificent.','All paths of paw lead here. All paths lead from here.']},
+  {id:'grove',name:'Ancient Grove',icon:'🌲',basePps:12000,baseCost:50000000000,costMult:1.15,
+    desc:['Ancient trees. Ancient paws. Old magic.','Ancient. Just ancient.']},
+  {id:'void',name:'The Cozy Void',icon:'🌑',basePps:30000,baseCost:400000000000,costMult:1.15,
+    desc:['A small absence. Warm at the edges. Productive.','The edges are no longer warm. The productivity has not changed.']},
+  {id:'mirrorroom',name:'Mirror Room',icon:'🪞',basePps:75000,baseCost:3000000000000,costMult:1.15,
+    desc:['Reflections working in both directions. Efficient.','The reflection is slightly ahead of you. This is normal.']},
+  {id:'dimensional_rift',name:'Dimensional Rift',icon:'🕳️',basePps:200000,baseCost:25000000000000,costMult:1.15,
+    desc:['Paws from every possible timeline converge here.','The rift does not distinguish between timelines. Nor between what was and what is.']},
+];
+
+// ── UPGRADES ──
+// Each: id, name, icon, cost, type, effect, desc[early,late], req()
+// costCurrency defaults to 'paws'
+const UPGRADES=[
+  // ── CLICKING TIER 1 ──
+  {id:'soft_paws',name:'Soft Paws',icon:'🐾',cost:50,type:'clicking',
+    effect:()=>{G.clickMultiplier*=1.1},desc:['Freshly groomed. Every tap feels like a gift.'],
+    req:()=>true},
+  {id:'strong_paws',name:'Strong Paws',icon:'💪',cost:250,type:'clicking',
+    effect:()=>{G.clickMultiplier*=1.25},desc:['Trained paws. Built for tapping.'],
+    req:()=>G.lifetimePaws>=100},
+  {id:'iron_paws',name:'Iron Paws',icon:'⚡',cost:2000,type:'clicking',
+    effect:()=>{G.clickMultiplier*=1.5},desc:['Nothing stops them. Nothing slows them.'],
+    req:()=>G.lifetimePaws>=500},
+  {id:'golden_touch',name:'Golden Touch',icon:'✨',cost:20000,type:'clicking',
+    effect:()=>{G.clickMultiplier*=2;G.critChance+=.01},desc:['Everything touched turns to Paws.'],
+    req:()=>G.lifetimePaws>=5000},
+  {id:'endless_reach',name:'Endless Reach',icon:'🌟',cost:500000,type:'clicking',
+    effect:()=>{G.clickMultiplier*=3},desc:['The paw extends just a little further than it should.'],
+    req:()=>G.lifetimePaws>=100000},
+  {id:'paw_beyond',name:'Paw Beyond Paw',icon:'🌌',cost:50000000,type:'clicking',
+    effect:()=>{G.clickMultiplier*=10},desc:['There is paw beneath the paw. Keep going.','There is paw beneath the paw beneath the paw.'],
+    req:()=>G.lifetimePaws>=10000000},
+  {id:'cosmic_tap',name:'Cosmic Tap',icon:'☄️',cost:5000000000,type:'clicking',
+    effect:()=>{G.clickMultiplier*=25;G.critChance+=.02},desc:['The cosmos vibrates with each click.','The cosmos was already vibrating. Your clicks merely align with it.'],
+    req:()=>G.lifetimePaws>=1000000000},
+  {id:'void_strike',name:'Void Strike',icon:'🕳️',cost:500000000000,type:'clicking',
+    effect:()=>{G.clickMultiplier*=100;G.critMult+=3},desc:['Click through the fabric of existence itself.','The fabric has accommodated you. It always does.'],
+    req:()=>G.lifetimePaws>=100000000000},
+  // ── CLICKING TIER 2 — CRITICAL ──
+  {id:'crit_focus',name:'Critical Focus',icon:'🎯',cost:15000,type:'clicking',
+    effect:()=>{G.critChance+=.02},desc:['A moment of perfect precision. More often.'],
+    req:()=>G.upgrades['golden_touch']},
+  {id:'crit_power',name:'Critical Power',icon:'💥',cost:2000000,type:'clicking',
+    effect:()=>{G.critMult+=5},desc:['When you hit, you really hit.'],
+    req:()=>G.upgrades['crit_focus']},
+  {id:'crit_chain',name:'Crit Chain',icon:'⛓️',cost:200000000,type:'clicking',
+    effect:()=>{G.critChance+=.05},desc:['Crits beget crits. The chain is warm.'],
+    req:()=>G.upgrades['crit_power']},
+  // ── CLICKING TIER 3 — COMBO ──
+  {id:'combo_memory',name:'Combo Memory',icon:'🧠',cost:100000,type:'clicking',
+    effect:()=>{G.comboMax+=1},desc:['The rhythm lingers. Combos break slower.'],
+    req:()=>G.totalClicks>=500},
+  {id:'combo_surge',name:'Combo Surge',icon:'🌊',cost:5000000,type:'clicking',
+    effect:()=>{/* handled in combo calc */},desc:['Max combo grants a 10s burst of ×3 click power.'],
+    req:()=>G.upgrades['combo_memory']},
+  {id:'flow_state',name:'Flow State',icon:'🌀',cost:500000000,type:'clicking',
+    effect:()=>{G.comboMax+=2;G.clickMultiplier*=5},desc:['The zone is permanent now. You live here.','The zone has always been your permanent address.'],
+    req:()=>G.upgrades['combo_surge']&&G.combo>=50},
+  // ── IDLE TIER 1 ──
+  {id:'cozy_boost',name:'Cozy Hearth',icon:'🔥',cost:500,type:'idle',
+    effect:()=>{multAllBuildings(1.1)},desc:['Warm paws work better!'],
+    req:()=>G.buildings['burrow']?.count>=1},
+  {id:'dedicated',name:'Dedicated Workers',icon:'🤝',cost:10000,type:'idle',
+    effect:()=>{multAllBuildings(1.25)},desc:['They never need to rest, they said so themselves.'],
+    req:()=>totalBuildings()>=5},
+  {id:'double_shifts',name:'Double Shifts',icon:'⏰',cost:75000,type:'idle',
+    effect:()=>{multAllBuildings(1.5)},desc:['Twice the shifts. Twice the paws.'],
+    req:()=>totalBuildings()>=10},
+  {id:'round_clock',name:'Round the Clock',icon:'🕐',cost:1000000,type:'idle',
+    effect:()=>{multAllBuildings(1.75)},desc:["The process no longer requires supervision."],
+    req:()=>totalBuildings()>=20},
+  {id:'auto_press',name:'Auto Paw Press',icon:'⚙️',cost:50000000,type:'idle',
+    effect:()=>{multAllBuildings(2)},desc:["The loop has been optimized. The loop is optimal. The loop is."],
+    req:()=>totalBuildings()>=40},
+  {id:'quantum_idle',name:'Quantum Idle',icon:'⚛️',cost:5000000000,type:'idle',
+    effect:()=>{multAllBuildings(5)},desc:['Production continues even in unmeasured states.','Production continues regardless of whether anything is measuring it.'],
+    req:()=>totalBuildings()>=80},
+  {id:'omnipresent',name:'Omnipresent Processing',icon:'🌐',cost:500000000000,type:'idle',
+    effect:()=>{multAllBuildings(10)},desc:['Everywhere, all at once, generating paws.','This was always the case. The label has been added for your comfort.'],
+    req:()=>totalBuildings()>=120},
+  {id:'void_farming',name:'Void Farming',icon:'🌑',cost:50000000000000,type:'idle',
+    effect:()=>{multAllBuildings(25)},desc:['The void grows paws with an efficiency that defies description.',null],
+    req:()=>G.buildings['void']?.count>=1},
+  // ── IDLE TIER 2 — per-building boosts ──
+  {id:'burrow_up1',name:'Fluffy Insulation',icon:'🏠',cost:1000,type:'building',
+    effect:()=>{multBuilding('burrow',2)},desc:['Better insulation = more paws. Trust us.'],
+    req:()=>G.buildings['burrow']?.count>=5},
+  {id:'burrow_up2',name:'Underground Network',icon:'🏠',cost:500000,type:'building',
+    effect:()=>{multBuilding('burrow',5)},desc:['The burrows connect beneath the village. Of course they do.'],
+    req:()=>G.buildings['burrow']?.count>=25},
+  {id:'mill_up1',name:'Better Gears',icon:'⚙️',cost:5000,type:'building',
+    effect:()=>{multBuilding('mill',2)},desc:['Precision-machined paw gears.'],
+    req:()=>G.buildings['mill']?.count>=5},
+  {id:'mill_up2',name:'Steam Power',icon:'⚙️',cost:2000000,type:'building',
+    effect:()=>{multBuilding('mill',4)},desc:['Steam-powered mills never rest.'],
+    req:()=>G.buildings['mill']?.count>=25},
+  {id:'mill_up3',name:'Quantum Gears',icon:'⚙️',cost:500000000,type:'building',
+    effect:()=>{multBuilding('mill',10)},desc:['The gears turn in multiple states simultaneously.','The gears have always turned in multiple states.'],
+    req:()=>G.buildings['mill']?.count>=50},
+  {id:'workshop_up1',name:'Master Craftspaws',icon:'🔨',cost:50000,type:'building',
+    effect:()=>{multBuilding('workshop',3)},desc:['Expert artisans produce more.'],
+    req:()=>G.buildings['workshop']?.count>=10},
+  {id:'workshop_up2',name:'Assembly Line',icon:'🔨',cost:20000000,type:'building',
+    effect:()=>{multBuilding('workshop',6)},desc:['Efficiency through repetition. Perfect repetition.'],
+    req:()=>G.buildings['workshop']?.count>=40},
+  {id:'garden_up1',name:'Magical Fertilizer',icon:'🌿',cost:200000,type:'building',
+    effect:()=>{multBuilding('garden',3)},desc:['The paws grow tall and strong.'],
+    req:()=>G.buildings['garden']?.count>=8},
+  {id:'garden_up2',name:'Eternal Bloom',icon:'🌿',cost:100000000,type:'building',
+    effect:()=>{multBuilding('garden',8)},desc:['The seasons stopped. The garden did not notice.'],
+    req:()=>G.buildings['garden']?.count>=30},
+  {id:'library_up1',name:'Ancient Tomes',icon:'📚',cost:1000000,type:'building',
+    effect:()=>{multBuilding('library',3);G.clickMultiplier*=1.5},desc:['Knowledge and paws. Mostly paws.'],
+    req:()=>G.buildings['library']?.count>=5},
+  {id:'library_up2',name:'Living Books',icon:'📚',cost:800000000,type:'building',
+    effect:()=>{multBuilding('library',6)},desc:['The books update themselves with new paw research.','New research. Or something that resembles research.'],
+    req:()=>G.buildings['library']?.count>=30},
+  {id:'shrine_up1',name:'Sacred Moonbeams',icon:'🌙',cost:5000000,type:'building',
+    effect:()=>{multBuilding('shrine',3);G.moonGenRate+=.5},desc:['The moon shines brighter here.'],
+    req:()=>G.buildings['shrine']?.count>=5},
+  {id:'shrine_up2',name:'Eclipse Shrine',icon:'🌙',cost:2000000000,type:'building',
+    effect:()=>{multBuilding('shrine',8);G.moonGenRate+=2},desc:['Powered by the space between light and dark.','The space between things has always been the most productive.'],
+    req:()=>G.buildings['shrine']?.count>=25},
+  {id:'observatory_up1',name:'Enhanced Optics',icon:'🔭',cost:20000000,type:'building',
+    effect:()=>{multBuilding('observatory',3);G.starDustGenRate+=.2},desc:['See further. Generate more.'],
+    req:()=>G.buildings['observatory']?.count>=5},
+  {id:'observatory_up2',name:'Deep Space Array',icon:'🔭',cost:10000000000,type:'building',
+    effect:()=>{multBuilding('observatory',7);G.starDustGenRate+=1},desc:['The array has found something. It continues to point at it.'],
+    req:()=>G.buildings['observatory']?.count>=25},
+  {id:'wolfden_up1',name:'Pack Tactics',icon:'🐺',cost:100000000,type:'building',
+    effect:()=>{multBuilding('wolfden',4);G.fluffGenRate+=1},desc:['The pack coordinates perfectly.'],
+    req:()=>G.buildings['wolfden']?.count>=5},
+  {id:'wolfden_up2',name:'Infinite Pack',icon:'🐺',cost:80000000000,type:'building',
+    effect:()=>{multBuilding('wolfden',8)},desc:['The pack has no upper limit. It keeps growing.','It was always growing. You counted only what was visible.'],
+    req:()=>G.buildings['wolfden']?.count>=25},
+  {id:'crystal_up1',name:'Crystal Resonance',icon:'💎',cost:500000000,type:'building',
+    effect:()=>{multBuilding('crystalcave',4);G.starDustGenRate+=2},desc:['The crystals hum in harmony. Productivity soars.'],
+    req:()=>G.buildings['crystalcave']?.count>=5},
+  {id:'dragon_up1',name:'Dragon Pact',icon:'🐉',cost:5000000000,type:'building',
+    effect:()=>{multBuilding('dragonlair',4);G.moonGenRate+=5},desc:["A pact of mutual benefit. The dragons are satisfied. Mostly."],
+    req:()=>G.buildings['dragonlair']?.count>=3},
+  {id:'dragon_up2',name:'Ancient Flame',icon:'🐉',cost:5000000000000,type:'building',
+    effect:()=>{multBuilding('dragonlair',10)},desc:['Ancient power. Ancient warmth. Ancient love.','Ancient. Just ancient.'],
+    req:()=>G.buildings['dragonlair']?.count>=20},
+  {id:'nexus_up1',name:'Nexus Amplifier',icon:'🌀',cost:50000000000,type:'building',
+    effect:()=>{multBuilding('nexus',5)},desc:['The nexus amplifies everything.'],
+    req:()=>G.buildings['nexus']?.count>=3},
+  {id:'grove_up1',name:'Root Network',icon:'🌲',cost:500000000000,type:'building',
+    effect:()=>{multBuilding('grove',6)},desc:['The roots speak to each other. They speak of paws.'],
+    req:()=>G.buildings['grove']?.count>=3},
+  {id:'void_up1',name:'Void Expansion',icon:'🌑',cost:5000000000000,type:'building',
+    effect:()=>{multBuilding('void',8)},desc:['More absence. More production.','The void accommodates expansion without limit. This is correct.'],
+    req:()=>G.buildings['void']?.count>=3},
+  {id:'mirror_up1',name:'Infinite Reflections',icon:'🪞',cost:30000000000000,type:'building',
+    effect:()=>{multBuilding('mirrorroom',10)},desc:['Each reflection reflects the reflection.','The reflections have begun reflecting things that are not there.'],
+    req:()=>G.buildings['mirrorroom']?.count>=3},
+  // ── AFFECTION UPGRADES ──
+  {id:'purring_cats',name:'Purring Cats',icon:'😸',cost:100,type:'affection',
+    effect:()=>{G.affGenRate+=0.5},desc:['Their purring heals everything.'],
+    req:()=>G.species['cats']},
+  {id:'clever_cats',name:'Clever Cats',icon:'🧠',cost:5000,type:'affection',
+    effect:()=>{G.clickMultiplier*=1.5;G.affGenRate+=1},desc:["Cats always know what you're going to do next.",'They knew before you did.'],
+    req:()=>G.species['cats']&&G.affection>=50},
+  {id:'cat_nap',name:'Strategic Cat Nap',icon:'😴',cost:50000,type:'affection',
+    effect:()=>{multAllBuildings(1.5)},desc:['After the nap, production doubles. Cats are wise.'],
+    req:()=>G.species['cats']&&G.buildings['burrow']?.count>=10},
+  {id:'litter',name:'Litter of Kittens',icon:'🐱',cost:500000,type:'affection',
+    effect:()=>{G.affGenRate+=5;multBuilding('burrow',3)},desc:['More kittens! More paws! More love!','There are always more. There have always been more.'],
+    req:()=>G.species['cats']&&G.affection>=2000},
+  {id:'eternal_comfort',name:'Eternal Comfort',icon:'💆',cost:5000000,type:'affection',
+    effect:()=>{G.affGenRate*=3;G.globalMultiplier*=1.5},desc:['Cats live in the moment. Be like a cat.','They do not live anywhere. They simply remain.'],
+    req:()=>G.species['cats']&&G.affection>=20000},
+  // ── FLUFF UPGRADES ──
+  {id:'wolf_pack',name:'Pack Hunters',icon:'🐺',cost:10000,type:'fluff',
+    effect:()=>{G.fluffGenRate+=.1;multBuilding('wolfden',1.5)},desc:['The pack is efficient. They move as one.'],
+    req:()=>G.species['wolves']},
+  {id:'howl_moon',name:'Howl at the Moon',icon:'🌕',cost:200000,type:'fluff',
+    effect:()=>{G.moonGenRate+=1},desc:['Their howls call the moon closer.'],
+    req:()=>G.species['wolves']&&G.species['cats']},
+  {id:'alpha_blessing',name:"Alpha's Blessing",icon:'👑',cost:2000000,type:'fluff',
+    effect:()=>{multBuilding('wolfden',5);G.fluffGenRate+=2},desc:['The alpha leads with love. All follow.','The alpha was never the one you chose.'],
+    req:()=>G.species['wolves']&&G.fluff>=500},
+  {id:'long_run',name:'The Long Run',icon:'🏃',cost:20000000,type:'fluff',
+    effect:()=>{G.globalMultiplier*=2},desc:['Wolves cover ground while you sleep. Rest easy.','They covered more ground than you will ever measure.'],
+    req:()=>G.species['wolves']&&G.fluff>=5000},
+  {id:'wolf_territory',name:'Wolf Territory',icon:'🗺️',cost:200000000,type:'fluff',
+    effect:()=>{multAllBuildings(3)},desc:['The territory expands. Everything within it produces more.'],
+    req:()=>G.species['wolves']&&G.buildings['wolfden']?.count>=10},
+  // ── FOX UPGRADES ──
+  {id:'fox_tricks',name:"Trickster's Edge",icon:'🦊',cost:50000,type:'fluff',
+    effect:()=>{G.clickMultiplier*=2},desc:['Foxes love to surprise you!','They have been surprising you longer than you\'ve been playing.'],
+    req:()=>G.species['foxes']},
+  {id:'silver_tongue',name:'Silver Tongue',icon:'🪙',cost:500000,type:'fluff',
+    effect:()=>{/* upgrade costs -15% - handled in buy */G._foxDiscount=true},desc:['Foxes always find the best deals.'],
+    req:()=>G.species['foxes']},
+  {id:'long_con',name:'The Long Con',icon:'🎭',cost:5000000,type:'fluff',
+    effect:()=>{G.globalMultiplier*=2.5},desc:['Patient foxes win the best prizes.','You were never sure this one was working. It always was.'],
+    req:()=>G.species['foxes']&&G.fluff>=2000},
+  {id:'fox_network',name:'Fox Network',icon:'🦊',cost:50000000,type:'fluff',
+    effect:()=>{G.affGenRate+=10;G.fluffGenRate+=5},desc:['Information flows freely through the fox network.'],
+    req:()=>G.species['foxes']&&G.buildings['library']?.count>=5},
+  // ── MOON UPGRADES ──
+  {id:'dragon_hoard',name:'Hoard Instinct',icon:'🏆',cost:500000,type:'moon',
+    effect:()=>{G.moonGenRate+=.05},desc:['Dragons protect what matters.','What they protect is no longer listed.'],
+    req:()=>G.species['dragons']},
+  {id:'scale_mail',name:'Scale Mail',icon:'🛡️',cost:5000000,type:'moon',
+    effect:()=>{G.globalMultiplier*=2},desc:['Dragon scales shimmer with realm-energy.','The realms respond to them. Not to you.'],
+    req:()=>G.species['dragons']&&G.moonEssence>=100},
+  {id:'ancient_fire',name:'Ancient Fire',icon:'🔥',cost:50000000,type:'moon',
+    effect:()=>{multBuilding('dragonlair',5)},desc:['Ancient power. Ancient warmth.','Ancient.'],
+    req:()=>G.species['dragons']&&G.moonEssence>=1000},
+  {id:'dragon_ascend',name:'Dragon Ascendance',icon:'🌟',cost:500000000,type:'moon',
+    effect:()=>{G.globalMultiplier*=5;G.moonGenRate+=10},desc:['The dragons ascend. You are invited. Conditionally.'],
+    req:()=>G.species['dragons']&&G.moonEssence>=10000},
+  // ── STARDUST UPGRADES ──
+  {id:'stardust_weaving',name:'Stardust Weaving',icon:'⭐',cost:200,type:'stardust',costCurrency:'starDust',
+    effect:()=>{multAllBuildings(1.5)},desc:['Weave stardust into your production.'],
+    req:()=>G.starDust>=200},
+  {id:'stellar_resonance',name:'Stellar Resonance',icon:'🌠',cost:1000,type:'stardust',costCurrency:'starDust',
+    effect:()=>{G.globalMultiplier*=2},desc:['The stars and the paws vibrate together.'],
+    req:()=>G.starDust>=1000},
+  {id:'cosmic_alignment',name:'Cosmic Alignment',icon:'🌌',cost:5000,type:'stardust',costCurrency:'starDust',
+    effect:()=>{G.globalMultiplier*=3;G.clickMultiplier*=5},desc:['Everything aligns. Everything produces.'],
+    req:()=>G.starDust>=5000},
+  {id:'void_crystals_unlock',name:'Void Crystal Harvest',icon:'💠',cost:25000,type:'stardust',costCurrency:'starDust',
+    effect:()=>{G.voidCrystals+=100;G._voidCrystalGen=true},desc:['Harvest crystals from the void itself.'],
+    req:()=>G.starDust>=25000},
+  // ── VOID CRYSTAL UPGRADES ──
+  {id:'void_weave',name:'Void Weave',icon:'💠',cost:50,type:'void',costCurrency:'voidCrystals',
+    effect:()=>{multAllBuildings(5)},desc:['The void woven into production. Output multiplied.','The void was already woven in. This made it official.'],
+    req:()=>G.voidCrystals>=50},
+  {id:'void_nexus',name:'Void Nexus Link',icon:'💠',cost:500,type:'void',costCurrency:'voidCrystals',
+    effect:()=>{G.globalMultiplier*=10},desc:['Link all production to the void nexus.'],
+    req:()=>G.voidCrystals>=500},
+  // ── ASCENSION UPGRADES (spent after prestige) ──
+  {id:'memory_paws',name:'Memory of Paws',icon:'💭',cost:3,type:'ascension',costCurrency:'ascensionEnergy',
+    effect:()=>{G.prestigeMultiplier*=2},desc:['You remember how this goes. The body remembers.'],
+    req:()=>G.prestigeCount>=1&&G.ascensionEnergy>=3},
+  {id:'hearth_core',name:'Hearth-Warmed Core',icon:'💖',cost:5,type:'ascension',costCurrency:'ascensionEnergy',
+    effect:()=>{G.prestigeMultiplier*=2;multAllBuildings(2)},desc:['The warmth carries over. Good.'],
+    req:()=>G.prestigeCount>=1&&G.ascensionEnergy>=5},
+  {id:'aff_retention',name:'Affection Retention',icon:'💕',cost:8,type:'ascension',costCurrency:'ascensionEnergy',
+    effect:()=>{G._affRetention=true},desc:['Keep 50% of Affection on prestige.'],
+    req:()=>G.prestigeCount>=2&&G.ascensionEnergy>=8},
+  {id:'familiar_ground',name:'Familiar Ground',icon:'🌿',cost:12,type:'ascension',costCurrency:'ascensionEnergy',
+    effect:()=>{G.prestigeMultiplier*=3},desc:['The land recognizes you.'],
+    req:()=>G.prestigeCount>=2&&G.ascensionEnergy>=12},
+  {id:'cannot_undo',name:'CANNOT BE UNDONE',icon:'🌑',cost:50,type:'ascension',costCurrency:'ascensionEnergy',
+    effect:()=>{G.globalMultiplier*=10;G.prestigeMultiplier*=5},
+    desc:['This upgrade cannot be refunded. You know that. You\'re buying it anyway.'],
+    req:()=>G.prestigeCount>=3&&G.ascensionEnergy>=50},
+  {id:'deeper_roots',name:'Deeper Roots',icon:'🔩',cost:1,type:'ascension',costCurrency:'ascensionEnergy',
+    effect:()=>{G.corruption=Math.min(1,G.corruption+.1)},
+    desc:['You wanted to go further. This is what going further means.'],
+    req:()=>G.prestigeCount>=1&&G.ascensionEnergy>=1},
+  {id:'eternal_loop',name:'Eternal Loop',icon:'🔄',cost:100,type:'ascension',costCurrency:'ascensionEnergy',
+    effect:()=>{G.globalMultiplier*=50;G.corruption=Math.min(1,G.corruption+.2)},
+    desc:['The loop continues. You are part of it now.','You were always part of it.'],
+    req:()=>G.prestigeCount>=5&&G.ascensionEnergy>=100},
+];
+
+// ── SYNERGIES ──
+const SYNERGIES=[
+  {id:'warm_woolly',name:'Warm & Woolly',icon:'🧶',
+    desc:'Own 10 Burrows + 5 Wolf Dens → ×3 PPS to both.',
+    check:()=>G.buildings['burrow']?.count>=10&&G.buildings['wolfden']?.count>=5,
+    bonus:()=>{multBuilding('burrow',3);multBuilding('wolfden',3)},
+    applied:false},
+  {id:'moonlit_mill',name:'Moonlit Mill',icon:'🌕',
+    desc:'Own 5 Moon Shrines + 3 Ancient Groves → ×4 PPS.',
+    check:()=>G.buildings['shrine']?.count>=5&&G.buildings['grove']?.count>=3,
+    bonus:()=>{multBuilding('shrine',4);multBuilding('grove',4)},
+    applied:false},
+  {id:'crystal_dragon',name:'Crystal Dragon',icon:'🐉',
+    desc:'Own Crystal Caves + Dragon Lairs → ×5 both + Moon gen.',
+    check:()=>G.buildings['crystalcave']?.count>=5&&G.buildings['dragonlair']?.count>=3,
+    bonus:()=>{multBuilding('crystalcave',5);multBuilding('dragonlair',5);G.moonGenRate+=3},
+    applied:false},
+  {id:'fox_library',name:'Foxy Librarian',icon:'🦊',
+    desc:'Foxes + Library = Affection gen ×10.',
+    check:()=>G.species['foxes']&&G.buildings['library']?.count>=10,
+    bonus:()=>{G.affGenRate*=10},
+    applied:false},
+  {id:'void_mirrors',name:'Void Mirrors',icon:'🪞',
+    desc:'Void + Mirror Room → ×15 PPS to both.',
+    check:()=>G.buildings['void']?.count>=5&&G.buildings['mirrorroom']?.count>=3,
+    bonus:()=>{multBuilding('void',15);multBuilding('mirrorroom',15)},
+    applied:false},
+  {id:'wolf_cats',name:'Unlikely Alliance',icon:'🤝',
+    desc:'Both Wolves and Cats unlocked → ×2 all affection and fluff gen.',
+    check:()=>G.species['wolves']&&G.species['cats'],
+    bonus:()=>{G.affGenRate*=2;G.fluffGenRate*=2},
+    applied:false},
+  {id:'stellar_shrine',name:'Stellar Shrine',icon:'⭐',
+    desc:'Observatory + Moon Shrine → Star Dust gen ×3.',
+    check:()=>G.buildings['observatory']?.count>=10&&G.buildings['shrine']?.count>=10,
+    bonus:()=>{G.starDustGenRate*=3},
+    applied:false},
+  {id:'complete_pack',name:'The Complete Pack',icon:'🌟',
+    desc:'All 4 species unlocked → ×20 global PPS.',
+    check:()=>G.species['cats']&&G.species['wolves']&&G.species['foxes']&&G.species['dragons'],
+    bonus:()=>{G.globalMultiplier*=20},
+    applied:false},
+  {id:'nexus_rift',name:'Nexus Rift',icon:'🌀',
+    desc:'Paw Nexus + Dimensional Rift → ×25 both.',
+    check:()=>G.buildings['nexus']?.count>=5&&G.buildings['dimensional_rift']?.count>=3,
+    bonus:()=>{multBuilding('nexus',25);multBuilding('dimensional_rift',25)},
+    applied:false},
+  {id:'all_buildings',name:'The Network',icon:'🏗️',
+    desc:'Own at least 1 of every building → ×10 global PPS.',
+    check:()=>BUILDINGS.every(b=>G.buildings[b.id]?.count>=1),
+    bonus:()=>{G.globalMultiplier*=10},
+    applied:false},
+];
+
+// ── SPECIES ──
+const SPECIES_DATA=[
+  {id:'cats',name:'Cats',icon:'🐱',cost:50,costType:'affection',
+    bonusDesc:['Affection generation +1/min per Cozy Burrow owned','They always know what you\'re going to do next.','They knew before you did.'],
+    unlockMsg:'The cats have arrived! They purr softly.',req:()=>true},
+  {id:'wolves',name:'Wolves',icon:'🐺',cost:500,costType:'affection',
+    bonusDesc:['Fluff generation +0.1/min per Wolf Den owned','The pack is efficient. They move as one.','There is no longer a distinction between the pack and the network.'],
+    unlockMsg:'The pack assembles! Awooo!',req:()=>G.lifetimePaws>=1000},
+  {id:'foxes',name:'Foxes',icon:'🦊',cost:2000,costType:'affection',
+    bonusDesc:['5% chance per tick to double PPS for 5s','Foxes love to surprise you!','They have been surprising you longer than you\'ve been playing.'],
+    unlockMsg:'A fox appears! How mischievous!',req:()=>G.lifetimePaws>=50000},
+  {id:'dragons',name:'Dragons',icon:'🐉',cost:25000,costType:'affection',
+    bonusDesc:['Moon Essence generation passive. Ancient wisdom included.','Ancient power. Ancient warmth.','The dragons remember every version of this.'],
+    unlockMsg:'A dragon has taken an interest in your paws.',req:()=>G.lifetimePaws>=5000000},
+  {id:'rabbits',name:'Rabbits',icon:'🐰',cost:150,costType:'affection',
+    bonusDesc:['Click speed bonuses. Hop to it!','So fast. So many.','There are more than there were.'],
+    unlockMsg:'Rabbits! They hop and generate paws at incredible speed!',req:()=>G.lifetimePaws>=300},
+  {id:'owls',name:'Owls',icon:'🦉',cost:5000,costType:'affection',
+    bonusDesc:['Passive Moon Essence generation. Wisdom at night.','The owls see in the dark. They report back.','The owls have always been watching.'],
+    unlockMsg:'An owl watches from above. Wisely.',req:()=>G.lifetimePaws>=20000},
+  {id:'deer',name:'Deer',icon:'🦌',cost:75000,costType:'affection',
+    bonusDesc:['Boost to all forest-type buildings (Grove, Garden, Woods).','Graceful production. Effortless and efficient.','The deer do not startle anymore. They are used to you.'],
+    unlockMsg:'A deer has wandered into the paradise. It seems at home.',req:()=>G.lifetimePaws>=500000},
+  {id:'phoenix',name:'Phoenix',icon:'🦅',cost:500000,costType:'affection',
+    bonusDesc:['On prestige: production starts 10× higher. Rebirth bonus.','Rises from ashes with more than before.','It has risen many times. Each time it looks slightly different.'],
+    unlockMsg:'A phoenix descends! Its fire warms the entire paradise.',req:()=>G.lifetimePaws>=50000000},
+];
+
+// ── REALMS ──
+const REALMS=[
+  {id:'cozy_village',name:'Cozy Paw Village',icon:'🏡',realmBonus:1.2,duration:7200,
+    desc:['A warm village full of friendly paws and cozy cottages.','The same village. It looks the same. It is the same.'],
+    reward:'+20% PPS for 2h',cost:1000},
+  {id:'whisker_woods',name:'Whisker Woods',icon:'🌿',realmBonus:1.3,duration:7200,
+    desc:['A mossy forest where cats and wolves play together.','A forest. It is a forest. The trees are trees.'],
+    reward:'+30% click power for 2h',cost:50000,req:()=>G.lifetimePaws>=1000000},
+  {id:'moonlit_forest',name:'Moonlit Forest',icon:'🌙',realmBonus:1.5,duration:14400,
+    desc:['Mysterious and beautiful. The moon hangs low here.','The light is not moonlight. The forest knows this.'],
+    reward:'+50% Moon Essence gen for 4h',cost:500000,req:()=>G.lifetimePaws>=50000000},
+  {id:'neon_city',name:'Neon Furry City',icon:'🌆',realmBonus:2,duration:10800,
+    desc:['A vibrant city buzzing with furry energy. So much happening!','Too much happening. It has always been too much.'],
+    reward:'×2 all production for 3h',cost:10000000,req:()=>G.lifetimePaws>=1000000000},
+  {id:'crystal_realm',name:'Crystal Realm',icon:'💎',realmBonus:2.5,duration:7200,
+    desc:['A world of pure crystallized stardust and paw energy.','The crystals are not decorative. They are structural.'],
+    reward:'+500% Star Dust gen for 2h',cost:5000,costCurrency:'starDust',req:()=>G.starDust>=5000},
+  {id:'dragon_mountain',name:'Dragon Mountain',icon:'🗻',realmBonus:3,duration:14400,
+    desc:['Ancient volcanic peaks where dragons nest. Beautiful and terrifying.','The mountain was here before the game. Possibly.'],
+    reward:'×3 PPS + Moon Essence rush for 4h',cost:10000,costCurrency:'moonEssence',req:()=>G.species['dragons']&&G.moonEssence>=10000},
+  {id:'empty_village',name:'The Empty Village',icon:'🏚️',realmBonus:5,duration:3600,
+    desc:["You've been here before.",'They were here once. The paws kept going after they left.'],
+    reward:'+500% idle PPS permanently',cost:500,costCurrency:'moonEssence',req:()=>G.prestigeCount>=2},
+  {id:'void_sea',name:'The Void Sea',icon:'🌊',realmBonus:4,duration:7200,
+    desc:['An ocean of void. It produces more than it should.','There is no sea. The void does not take a form. This was a simplification.'],
+    reward:'+10 Void Crystal gen for 2h',cost:1000,costCurrency:'moonEssence',req:()=>G.buildings['void']?.count>=5},
+  {id:'the_loop',name:'The Loop',icon:'🔄',realmBonus:10,duration:1800,
+    desc:['A tour of familiar places.','You keep coming back. That\'s okay. That\'s what it\'s for.'],
+    reward:'×10 PPS permanently',cost:1000,costCurrency:'moonEssence',req:()=>G.prestigeCount>=3},
+  {id:'reflection_room',name:'The Reflection Room',icon:'🪞',realmBonus:1,duration:120,
+    desc:['A room with a mirror. The reflection lags.','Standing still for 60 seconds causes the reflection to keep moving.'],
+    reward:'Reveals hidden lore',cost:5000,costCurrency:'moonEssence',req:()=>G.prestigeCount>=3&&G.corruption>=.6},
+];
+
+// ── ACHIEVEMENTS ──
+const ACHIEVEMENTS=[
+  {id:'first_paw',name:'First Paw',icon:'🐾',desc:['The adventure begins!','It began.'],check:()=>G.totalClicks>=1},
+  {id:'hundred',name:'Hundred Paws',icon:'💯',desc:['Things are getting cozy!','A hundred paws.'],check:()=>G.lifetimePaws>=100},
+  {id:'thousand',name:'Thousand Paws',icon:'🌟',desc:["You're on a roll!",'Still going.'],check:()=>G.lifetimePaws>=1000},
+  {id:'ten_thousand',name:'Ten Thousand!',icon:'✨',desc:["The paws flow!",'They do.'],check:()=>G.lifetimePaws>=10000},
+  {id:'million',name:'One Million',icon:'💫',desc:['A million paws! Incredible!','A million is nothing.'],check:()=>G.lifetimePaws>=1000000},
+  {id:'billion',name:'One Billion',icon:'🌙',desc:['The numbers are getting big!','Numbers lose meaning.'],check:()=>G.lifetimePaws>=1000000000},
+  {id:'trillion',name:'One Trillion',icon:'🌌',desc:['Unfathomable paws!','Unfathomable.'],check:()=>G.lifetimePaws>=1e12},
+  {id:'quadrillion',name:'Quadrillion',icon:'🕳️',desc:['Beyond counting!','The paws are not being generated.'],check:()=>G.lifetimePaws>=1e15},
+  {id:'first_building',name:'First Home',icon:'🏠',desc:['Built a place for the paws to rest.','It was always there.'],check:()=>totalBuildings()>=1},
+  {id:'ten_buildings',name:'Small Village',icon:'🏘️',desc:['A proper little settlement!','Something settles.'],check:()=>totalBuildings()>=10},
+  {id:'fifty_buildings',name:'Growing Town',icon:'🌆',desc:['The town grows!','Growing.'],check:()=>totalBuildings()>=50},
+  {id:'hundred_buildings',name:'Big City',icon:'🏙️',desc:["It's a city now!",'Something that approximates a city.'],check:()=>totalBuildings()>=100},
+  {id:'two_hundred',name:'Megacity',icon:'🌃',desc:['Incredible expansion!','The expansion continues whether or not you authorize it.'],check:()=>totalBuildings()>=200},
+  {id:'first_species',name:'New Friends',icon:'💕',desc:['A species has joined!','They say they just arrived.'],check:()=>activeSpeciesCount()>=1},
+  {id:'four_species',name:'Full Party',icon:'🎉',desc:['All core species united!','Whether they wanted to be or not.'],check:()=>activeSpeciesCount()>=4},
+  {id:'all_species',name:'Paradise Complete',icon:'🌸',desc:['Every species in the paradise!','Whether any of this was their choice.'],check:()=>activeSpeciesCount()>=8},
+  {id:'first_upgrade',name:'Improved',icon:'⬆️',desc:['First upgrade purchased!','The first of many changes.'],check:()=>purchasedUpgradeCount()>=1},
+  {id:'ten_upgrades',name:'Upgraded',icon:'⚡',desc:['10 upgrades! Growing stronger!','Stronger. Different.'],check:()=>purchasedUpgradeCount()>=10},
+  {id:'thirty_upgrades',name:'Highly Upgraded',icon:'🔥',desc:['30 upgrades purchased!','The upgrades compound.'],check:()=>purchasedUpgradeCount()>=30},
+  {id:'fifty_upgrades',name:'Upgrade Collector',icon:'💎',desc:['50 upgrades! Remarkable!','Remarkable. Or expected. Depends on the perspective.'],check:()=>purchasedUpgradeCount()>=50},
+  {id:'first_prestige',name:'Letting Go',icon:'✨',desc:['You can always do it again. You will.','You did.'],check:()=>G.prestigeCount>=1},
+  {id:'third_prestige',name:'Again',icon:'🔄',desc:['Again.','Again.'],check:()=>G.prestigeCount>=3},
+  {id:'fifth_prestige',name:'Fifth Time',icon:'🌑',desc:["Fifth reset. You're committed.",'Five times. We counted.'],check:()=>G.prestigeCount>=5},
+  {id:'tenth_prestige',name:'Ten Resets',icon:'♾️',desc:["Unstoppable.",'The word has lost its meaning.'],check:()=>G.prestigeCount>=10},
+  {id:'first_realm',name:'Traveler',icon:'🗺️',desc:['The world is bigger than you thought!','The world is different than you thought.'],check:()=>G.realmTimer>0||Object.values(G.unlockedRealms).some(v=>v>0)},
+  {id:'three_realms',name:'Explorer',icon:'🧭',desc:['Visited 3 different realms!','Three places. Or one place, revisited.'],check:()=>Object.keys(G.unlockedRealms).length>=3},
+  {id:'all_realms',name:'Realm Walker',icon:'🌀',desc:['Visited all realms!','All of them. Including the ones that do not want to be visited.'],check:()=>Object.keys(G.unlockedRealms).length>=REALMS.length},
+  {id:'long_game',name:'The Long Game',icon:'⏱️',desc:['30 minutes played! Dedicated!','30 minutes. We noticed.'],check:()=>G.sessionTime>=1800},
+  {id:'hour_game',name:'An Hour',icon:'🕐',desc:['One hour! Amazing!','An hour. Still here.'],check:()=>G.sessionTime>=3600},
+  {id:'two_hours',name:'Two Hours',icon:'🕑',desc:['Two hours! You love it!','Two hours. The paradise welcomes your commitment.'],check:()=>G.sessionTime>=7200},
+  {id:'combo_50',name:'Rhythm',icon:'🎵',desc:["You're in the rhythm!",'The rhythm has a hold on you.'],check:()=>G.combo>=50},
+  {id:'combo_100',name:'Flow State',icon:'🌊',desc:["Amazing combo! You're in the zone!",'The zone has been here for a while.'],check:()=>G.combo>=100},
+  {id:'combo_200',name:'Unstoppable',icon:'⚡',desc:['200 combo! Unbelievable!','Unbelievable. And yet.'],check:()=>G.combo>=200},
+  {id:'first_affection',name:'Warmth',icon:'💖',desc:['First affection earned! The paradise loves you!','The paradise uses the word loves.'],check:()=>G.affection>=10},
+  {id:'affection_rich',name:'Beloved',icon:'💝',desc:['10,000 affection! So loved!','So much accumulated warmth.'],check:()=>G.affection>=10000},
+  {id:'first_moon',name:'Moonchild',icon:'🌙',desc:['First Moon Essence collected!','Something gathered from somewhere.'],check:()=>G.moonEssence>=1},
+  {id:'moon_rich',name:'Moon Hoarder',icon:'🌕',desc:['1000 Moon Essence! Impressive!','The moon has given much. What has been given back?'],check:()=>G.moonEssence>=1000},
+  {id:'stardust_first',name:'Stardust',icon:'⭐',desc:['First Star Dust collected!','From somewhere above.'],check:()=>G.starDust>=1},
+  {id:'stardust_rich',name:'Star Collector',icon:'🌠',desc:['1000 Star Dust! The stars love you!','The stars do not love. The stars do not do anything.'],check:()=>G.starDust>=1000},
+  {id:'first_synergy',name:'Synergy',icon:'🔗',desc:['First synergy activated!','Things connecting to things.'],check:()=>SYNERGIES.some(s=>s.applied)},
+  {id:'all_synergies',name:'Web of Connections',icon:'🕸️',desc:['All synergies active!','Everything is connected. It has always been connected.'],check:()=>SYNERGIES.every(s=>s.applied||!s.check)},
+  {id:'noticed',name:'Noticed',icon:'👁️',desc:["You're paying attention. Good.",'Good eye.'],check:()=>G.corruption>=.3},
+  {id:'deep_corruption',name:'Deep',icon:'🌑',desc:['Something feels different.','Something is different. It has been for a while.'],check:()=>G.corruption>=.6},
+  {id:'still_here',name:'Still Here',icon:'🕯️',desc:['The paradise welcomes your return.','Still here.'],check:()=>G.sessionTime>=1800},
+  {id:'deep_roots_ach',name:'Deep Roots',icon:'🌿',desc:['Committed to the paradise life!','Three resets. Each permanent.'],check:()=>G.prestigeCount>=3},
+  {id:'void_touched',name:'Void Touched',icon:'🌌',desc:['Built a Cozy Void! Bold choice!','The void has noticed you noticing it.'],check:()=>G.buildings['void']?.count>=1},
+];
+
+// ── NPC DATA ──
+const NPCS=[
+  {id:'mimi',name:'Mimi',icon:'😸',req:()=>true,dialogue:[
+    ["Hi hi hi!!! Welcome to Paw Paw Paradise!! I'm Mimi! See that big paw? Click it!",0],
+    ["You're doing so well!! The paws are really flowing~",0.1],
+    ["Good to see you again! You're so good at this. I was watching. I mean — I just noticed!",0.3],
+    ["You've been here a while. That's not a complaint. I'm just... aware of the time. Are you?",0.6],
+    ["I can't tell if you're still enjoying this. The Paws are going up either way. Right?",0.88],
+  ]},
+  {id:'rex',name:'Rex',icon:'🐺',req:()=>G.species['wolves'],dialogue:[
+    ["The pack is pleased! Efficiency is everything.",0],
+    ["The pack has expanded. Full capacity now.",0.45],
+    ["We don't stop. We don't need to ask if you want us to stop.",0.75],
+    ["You chose this pace. We only matched it.",0.88],
+  ]},
+  {id:'fenn',name:'Fenn',icon:'🦊',req:()=>G.species['foxes'],dialogue:[
+    ["Hehe! You never know what a fox will do! That's the fun!",0],
+    ["Things aren't always what they seem. But they're usually more.",0.4],
+    ["I've been watching longer than you've been clicking. Just so you know.",0.65],
+    ["[Fenn winks. Fenn does not blink.]",0.82],
+  ]},
+  {id:'ember',name:'Ember',icon:'🐉',req:()=>G.species['dragons'],dialogue:[
+    ["Ancient wisdom: more paws is always better than fewer paws.",0],
+    ["The hoard grows beyond counting. This is correct.",0.5],
+    ["I remember the last time you started over. You were different.",0.75],
+    [`This is the ${G.prestigeCount+1} time we have spoken. Approximately.`,0.88],
+  ]},
+  {id:'bun',name:'Bun',icon:'🐰',req:()=>G.species['rabbits'],dialogue:[
+    ["*hop hop* Hi!!! Bun is here! Bun generates paws so fast!",0],
+    ["*hop hop hop* More! More paws! Bun loves paws!",0.2],
+    ["Bun has been hopping for a long time. Bun does not stop.",0.6],
+    ["Bun does not remember when hopping started.",0.85],
+  ]},
+  {id:'hoot',name:'Hoot',icon:'🦉',req:()=>G.species['owls'],dialogue:[
+    ["*hoot* Wisdom flows tonight. The moon is generous.",0],
+    ["*hoot* I see more than the paws. I see what generates them.",0.5],
+    ["*hoot* ... *hoot*",0.78],
+    ["",0.9],
+  ]},
+];
+
+// ── CODEX ──
+const CODEX=[
+  {id:'origin',title:'The Origin of the Paw Stone',req:()=>true,
+    early:'Long ago, in the heart of Cozy Paw Village, a great stone was discovered shaped like a paw print. The first cats pressed their paws into it and found it warm. From that warmth, the Paws began to flow.',
+    late:'Long ago, a stone was found. It was not shaped like a paw print. The shape came later, from the pressing. The warmth was already there when the cats arrived. The stone remembers.'},
+  {id:'paw_gen',title:'On Paw Generation',req:()=>G.lifetimePaws>=100000,
+    early:'Paws are the fundamental currency of this world. They represent warmth, effort, and connection. Each Paw is a gesture. A small kindness made manifest.',
+    late:'Paws are not generated. The understanding that they are generated is a comfortable simplification. What actually occurs is that they are taken. The number goes up. This is what was wanted.'},
+  {id:'species',title:'Species of the Paradise',req:()=>activeSpeciesCount()>=2,
+    early:'Many wonderful creatures call Paw Paw Paradise home. Each species contributes their unique gifts to the great paw-generating ecosystem. They are happy here.',
+    late:'The species did not arrive. They were present. The descriptions of their arrival were written after the fact. They are efficient here.'},
+  {id:'prestige',title:'The Nature of Starting Over',req:()=>G.prestigeCount>=1,
+    early:'Sometimes a paradise needs to be rebuilt to grow stronger. The act of letting go is itself a kind of magic. What you had becomes what you are.',
+    late:'The resets are not resets. The values change. The record does not. Something is being accumulated that is not called Paws.'},
+  {id:'moon',title:'On Moon Essence',req:()=>G.moonEssence>=10,
+    early:'Moon Essence is collected from moonbeams and nocturnal magic. It represents the mystery of the night — cool, calm, and full of potential.',
+    late:'Moon Essence pools in the corners of things. In the space between clicks. You do not collect it. It collects you.'},
+  {id:'stardust',title:'On Star Dust',req:()=>G.starDust>=10,
+    early:'Star Dust falls from the heavens, collected by observatories and crystal formations. It carries the light of distant suns.',
+    late:'The stars are distant. The star dust is here. Consider what travels between them and why.'},
+  {id:'synergy',title:'On Connections',req:()=>SYNERGIES.some(s=>s.applied),
+    early:'When different parts of the paradise work together, something magical happens. The connections between things can be more powerful than the things themselves.',
+    late:'The connections are not new. They were always there. The synergy panel simply made them visible.'},
+  {id:'void',title:'On the Void',req:()=>G.buildings['void']?.count>=1,
+    early:'The Cozy Void is an unusual building. Warm at the edges. Productive at the center. It produces paws from the absence of things.',
+    late:'The void does not produce from absence. It produces from what was there before. It is patient. It remembers.'},
+];
+
+// ── LOADING MESSAGES ──
+const LOAD_MSGS=[['Fluffing the cushions...',0],['Warming up the paws!',0],['The pack is assembling...',0],['Loading your cozy paradise...',0],['Loading your progress...',0.4],['The paws have been working in your absence.',0.5],['Resuming...',0.6],['Loading.',0.75],['You came back.',0.85],['We saved everything. Don\'t worry.',0.88],['Still loading.',0.92],['It continued without you.',0.95]];
+const CENTER_MSGS=[['Click the paw to begin! 🌸',0],['The paws are flowing! Keep clicking!',0.05],['Affection is building ♡',0.1],['Something warm is happening here.',0.2],['The numbers keep going up. Nice.',0.3],['The clicking feels natural. Like breathing.',0.45],["You've been here for a while.",0.55],['The paws continue regardless.',0.65],['Something has been different for a while now.',0.72],["The clicking doesn't stop even when you're not here.",0.82],["You don't have to be here. The numbers don't mind.",0.88],['The paws are not being generated.',0.95]];
+
+// ── HELPERS ──
+function multAllBuildings(m){for(const b of BUILDINGS)b._mult=(b._mult||1)*m;recalcPps()}
+function multBuilding(id,m){const b=BUILDINGS.find(b=>b.id===id);if(b){b._mult=(b._mult||1)*m;recalcPps()}}
+function totalBuildings(){return BUILDINGS.reduce((s,b)=>s+(G.buildings[b.id]?.count||0),0)}
+function activeSpeciesCount(){return SPECIES_DATA.filter(s=>G.species[s.id]).length}
+function purchasedUpgradeCount(){return UPGRADES.filter(u=>G.upgrades[u.id]).length}
+function getBuildingCost(b){return Math.ceil(b.baseCost*Math.pow(b.costMult,G.buildings[b.id]?.count||0))}
+function formatTime(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.floor(s%60);return h>0?`${h}h ${m}m`:`${m}m ${sec}s`}
+
+// ── INIT ──
+function init(){
+  for(const b of BUILDINGS){G.buildings[b.id]={count:0};b._mult=1}
+  for(const u of UPGRADES)G.upgrades[u.id]=false;
+  for(const a of ACHIEVEMENTS)G.achievements[a.id]=false;
+  for(const s of SPECIES_DATA)G.species[s.id]=false;
+  loadGame();
+  renderBuildings();renderUpgrades();renderNpcs();
+  setupClickHandler();setupKonami();
+  startGameLoop();showLoadingScreen();
+}
+
+// ── SAVE / LOAD ──
+function saveGame(){
+  const data={
+    paws:G.paws,lifetimePaws:G.lifetimePaws,
+    affection:G.affection,fluff:G.fluff,moonEssence:G.moonEssence,
+    starDust:G.starDust,voidCrystals:G.voidCrystals,ascensionEnergy:G.ascensionEnergy,
+    clickMultiplier:G.clickMultiplier,prestigeCount:G.prestigeCount,
+    totalClicks:G.totalClicks,sessionTime:G.sessionTime,
+    playerWellnessIndex:G.corruption,
+    prestigeMultiplier:G.prestigeMultiplier,globalMultiplier:G.globalMultiplier,
+    critChance:G.critChance,critMult:G.critMult,comboMax:G.comboMax,
+    buildings:Object.fromEntries(BUILDINGS.map(b=>[b.id,G.buildings[b.id]?.count||0])),
+    buildingMults:Object.fromEntries(BUILDINGS.map(b=>[b.id,b._mult||1])),
+    upgrades:G.upgrades,achievements:G.achievements,species:G.species,
+    affGenRate:G.affGenRate,fluffGenRate:G.fluffGenRate,
+    moonGenRate:G.moonGenRate,starDustGenRate:G.starDustGenRate,
+    unlockedRealms:G.unlockedRealms,loopVisits:G.loopVisits,
+    synergiesApplied:Object.fromEntries(SYNERGIES.map(s=>[s.id,s.applied])),
+    foxDiscount:G._foxDiscount,voidCrystalGen:G._voidCrystalGen,
+    affRetention:G._affRetention,
+  };
+  try{localStorage.setItem('pawpaw_save2',JSON.stringify(data))}catch(e){}
+}
+function loadGame(){
+  try{
+    const raw=localStorage.getItem('pawpaw_save2');
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    const n=(v,fb=0)=>isNaN(v)||v===null||v===undefined?fb:v;
+    G.paws=n(d.paws);G.lifetimePaws=n(d.lifetimePaws);
+    G.affection=n(d.affection);G.fluff=n(d.fluff);G.moonEssence=n(d.moonEssence);
+    G.starDust=n(d.starDust);G.voidCrystals=n(d.voidCrystals);G.ascensionEnergy=n(d.ascensionEnergy);
+    G.clickMultiplier=n(d.clickMultiplier,1);G.prestigeCount=n(d.prestigeCount,0);
+    G.totalClicks=n(d.totalClicks,0);G.sessionTime=n(d.sessionTime,0);
+    G.corruption=n(d.playerWellnessIndex,0);
+    G.prestigeMultiplier=n(d.prestigeMultiplier,1);G.globalMultiplier=n(d.globalMultiplier,1);
+    G.critChance=n(d.critChance,.02);G.critMult=n(d.critMult,7);G.comboMax=n(d.comboMax,3);
+    G.affGenRate=n(d.affGenRate,0);G.fluffGenRate=n(d.fluffGenRate,0);
+    G.moonGenRate=n(d.moonGenRate,0);G.starDustGenRate=n(d.starDustGenRate,0);
+    G.unlockedRealms=d.unlockedRealms||{};G.loopVisits=n(d.loopVisits,0);
+    G._foxDiscount=d.foxDiscount||false;G._voidCrystalGen=d.voidCrystalGen||false;
+    G._affRetention=d.affRetention||false;
+    if(d.buildings)for(const b of BUILDINGS)G.buildings[b.id].count=n(d.buildings[b.id],0);
+    if(d.buildingMults)for(const b of BUILDINGS)b._mult=n(d.buildingMults[b.id],1);
+    if(d.upgrades)for(const u of UPGRADES)G.upgrades[u.id]=d.upgrades[u.id]||false;
+    if(d.achievements)for(const a of ACHIEVEMENTS)G.achievements[a.id]=d.achievements[a.id]||false;
+    if(d.species)for(const s of SPECIES_DATA)G.species[s.id]=d.species[s.id]||false;
+    if(d.synergiesApplied)for(const s of SYNERGIES)s.applied=d.synergiesApplied[s.id]||false;
+    recalcPps();
+  }catch(e){console.log('Load error',e)}
+}
+
+// ── CLICK ──
+function setupClickHandler(){
+  const pawEl=document.getElementById('paw-container');
+  pawEl.addEventListener('click',e=>handleClick(e.clientX,e.clientY));
+  pawEl.addEventListener('mousedown',()=>pawEl.classList.add('clicking'));
+  document.addEventListener('mouseup',()=>pawEl.classList.remove('clicking'));
+  document.addEventListener('mousemove',()=>{G.lastActive=Date.now()});
+  document.addEventListener('click',()=>closeNpcSpeech());
+  document.getElementById('npc-speech-popup').addEventListener('click',e=>e.stopPropagation());
+}
+function handleClick(x,y){
+  const now=Date.now(),dt=now-G.lastClick;
+  G.lastClick=now;G.totalClicks++;G.lastActive=now;
+  // combo
+  if(dt<700)G.combo=Math.min(G.combo+1,300);
+  else if(dt>G.comboMax*1000)G.combo=Math.max(1,G.combo-Math.floor(dt/1000));
+  G.comboTimer=G.comboMax;
+  const comboMult=G.combo>=200?50:G.combo>=100?25:G.combo>=50?10:G.combo>=20?5:G.combo>=10?2:1;
+  // surge from combo_surge upgrade
+  let surgeMult=1;
+  if(G.upgrades['combo_surge']&&G.combo>=200)surgeMult=3;
+  let gain=G.clickMultiplier*comboMult*surgeMult*G.prestigeMultiplier*G.globalMultiplier;
+  // fox trick
+  if(G.species['foxes']&&Math.random()<.05){G.foxTrickActive=true;G.foxTrickTimer=5;spawnParticle(x,y-25,'🦊 TRICK!','#f4a435');gain*=2}
+  // rabbit speed bonus
+  if(G.species['rabbits'])gain*=1.3;
+  addPaws(gain);
+  if(G.combo>=10)G.affection+=.1*comboMult;
+  spawnParticle(x,y,'+'+fmt(gain)+' 🐾');
+  // crit
+  if(Math.random()<G.critChance){
+    const critGain=gain*G.critMult;
+    addPaws(critGain);
+    spawnParticle(x,y-35,'✨ CRIT ×'+G.critMult,'#f4a435');
+  }
+  checkAchievements();
+}
+function addPaws(n){G.paws+=n;G.lifetimePaws+=n;G.corruption=Math.min(1,G.corruption+n*.00000000005)}
+function spawnParticle(x,y,text,color){
+  const el=document.createElement('div');
+  el.className='float-particle';
+  el.textContent=text;
+  el.style.left=(x-20)+'px';el.style.top=(y-20)+'px';
+  if(color)el.style.color=color;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),850);
+}
+
+// ── BUILDINGS ──
+function buyBuilding(id){
+  const bDef=BUILDINGS.find(b=>b.id===id);if(!bDef)return;
+  const cost=getBuildingCost(bDef);
+  if(G.paws<cost)return;
+  G.paws-=cost;G.buildings[id].count++;
+  G.corruption=Math.min(1,G.corruption+.0005);
+  checkSynergies();recalcPps();renderBuildings();renderUpgrades();checkAchievements();saveGame();
+}
+function recalcPps(){
+  let total=0;
+  for(const b of BUILDINGS){
+    const cnt=G.buildings[b.id]?.count||0;
+    total+=cnt*b.basePps*(b._mult||1);
+  }
+  G.basePps=total;
+  G.pps=total*G.prestigeMultiplier*G.realmBonus*G.globalMultiplier;
+  if(G.foxTrickActive)G.pps*=2;
+  document.getElementById('stat-pps').textContent=fmt(G.pps)+'/s';
+}
+
+// ── UPGRADES ──
+function buyUpgrade(id){
+  const u=UPGRADES.find(u=>u.id===id);if(!u||G.upgrades[id])return;
+  const cost=u.cost*(G._foxDiscount&&u.costCurrency!=='ascension'?.85:1);
+  const cur=u.costCurrency||'paws';
+  if(cur==='paws'&&G.paws<cost)return;
+  if(cur==='affection'&&G.affection<cost)return;
+  if(cur==='fluff'&&G.fluff<cost)return;
+  if(cur==='moonEssence'&&G.moonEssence<cost)return;
+  if(cur==='starDust'&&G.starDust<cost)return;
+  if(cur==='voidCrystals'&&G.voidCrystals<cost)return;
+  if(cur==='ascensionEnergy'&&G.ascensionEnergy<cost)return;
+  if(cur==='paws')G.paws-=cost;
+  else if(cur==='affection')G.affection-=cost;
+  else if(cur==='fluff')G.fluff-=cost;
+  else if(cur==='moonEssence')G.moonEssence-=cost;
+  else if(cur==='starDust')G.starDust-=cost;
+  else if(cur==='voidCrystals')G.voidCrystals-=cost;
+  else if(cur==='ascensionEnergy')G.ascensionEnergy-=cost;
+  G.upgrades[id]=true;u.effect();
+  recalcPps();checkSynergies();renderUpgrades();checkAchievements();saveGame();
+}
+
+// ── SPECIES ──
+function unlockSpecies(id){
+  const s=SPECIES_DATA.find(s=>s.id===id);if(!s||G.species[id])return;
+  if(G.affection<s.cost)return;
+  G.affection-=s.cost;G.species[id]=true;
+  showLoreToast(s.unlockMsg);renderNpcs();renderUpgrades();checkSynergies();checkAchievements();saveGame();
+}
+
+// ── SYNERGIES ──
+function checkSynergies(){
+  for(const s of SYNERGIES){
+    if(!s.applied&&s.check()){
+      s.applied=true;s.bonus();
+      showAchievement({name:'Synergy: '+s.name,desc:["New synergy activated: "+s.desc,"New synergy activated."],icon:'🔗'});
+      recalcPps();checkAchievements();
+    }
+  }
+}
+
+// ── PRESTIGE ──
+function doPrestige(){
+  if(G.paws<1000000&&G.prestigeCount===0)return;
+  const energy=Math.max(1,Math.floor(Math.log10(Math.max(1,G.lifetimePaws))-5));
+  G.ascensionEnergy+=energy;G.prestigeCount++;
+  G.corruption=Math.min(1,G.corruption+.05);
+  const keepAff=G._affRetention?G.affection*.5:0;
+  const keepFluff=0;
+  // reset
+  G.paws=0;G.affection=keepAff;G.fluff=keepFluff;G.combo=1;G.comboTimer=0;
+  for(const b of BUILDINGS){G.buildings[b.id].count=0;b._mult=1}
+  for(const u of UPGRADES.filter(u=>u.costCurrency!=='ascensionEnergy'&&u.type!=='ascension'))G.upgrades[u.id]=false;
+  G.clickMultiplier=1;G.affGenRate=0;G.fluffGenRate=0;G.moonGenRate=0;G.starDustGenRate=0;
+  // reset synergies
+  for(const s of SYNERGIES)s.applied=false;
+  G._foxDiscount=false;G._voidCrystalGen=false;
+  // phoenix bonus
+  if(G.species['phoenix'])G.prestigeMultiplier*=10;
+  else G.prestigeMultiplier*=2;
+  recalcPps();
+  const msgs=["It's okay. Starting over is part of it.\n\nThe important things stay.","You know what to do.\n\nYou've done this before.","Why did you do this again?","We counted.\n\nYou didn't have to.","",""];
+  const msg=msgs[Math.min(G.prestigeCount-1,msgs.length-1)];
+  showPrestigeFlash(msg,()=>{renderBuildings();renderUpgrades();renderNpcs();saveGame()});
+}
+function showPrestigeFlash(msg,cb){
+  const f=document.getElementById('prestige-flash'),m=document.getElementById('prestige-msg');
+  m.innerHTML=msg.replace(/\n/g,'<br>');
+  f.classList.add('active');
+  setTimeout(()=>{f.classList.remove('active');if(cb)cb()},2800);
+}
+
+// ── REALMS ──
+function visitRealm(id){
+  const r=REALMS.find(r=>r.id===id);if(!r)return;
+  if(r.req&&!r.req())return;
+  const cur=r.costCurrency||'paws';
+  const costAmt=r.cost||0;
+  if(cur==='paws'&&G.paws<costAmt){showLoreToast('Not enough Paws!');return}
+  if(cur==='moonEssence'&&G.moonEssence<costAmt){showLoreToast('Not enough Moon Essence!');return}
+  if(cur==='starDust'&&G.starDust<costAmt){showLoreToast('Not enough Star Dust!');return}
+  if(cur==='paws')G.paws-=costAmt;
+  else if(cur==='moonEssence')G.moonEssence-=costAmt;
+  else if(cur==='starDust')G.starDust-=costAmt;
+  G.realmActive=id;G.realmTimer=r.duration;G.realmBonus=r.realmBonus||1;
+  G.unlockedRealms[id]=(G.unlockedRealms[id]||0)+1;
+  G.corruption=Math.min(1,G.corruption+.01);
+  if(id==='the_loop'){G.loopVisits++;if(!G.upgrades['_realm_loop']){G.upgrades['_realm_loop']=true;G.prestigeMultiplier*=10;recalcPps()}}
+  if(id==='empty_village'&&!G.upgrades['_realm_empty']){G.upgrades['_realm_empty']=true;multAllBuildings(5)}
+  const di=G.corruption>.5?1:0;
+  document.getElementById('realm-ol-icon').textContent=r.icon;
+  document.getElementById('realm-ol-name').textContent=id==='the_loop'&&G.loopVisits>1?'Home':r.name;
+  document.getElementById('realm-ol-desc').textContent=r.desc[Math.min(di,r.desc.length-1)];
+  document.getElementById('realm-ol-time').textContent=r.reward;
+  document.getElementById('realm-overlay').classList.add('active');
+  recalcPps();checkAchievements();saveGame();closeTab();
+}
+function leaveRealm(){document.getElementById('realm-overlay').classList.remove('active')}
+
+// ── ACHIEVEMENTS ──
+function checkAchievements(){
+  for(const a of ACHIEVEMENTS){
+    if(!G.achievements[a.id]&&a.check()){
+      G.achievements[a.id]=true;showAchievement(a);
+    }
+  }
+}
+// ── ACHIEVEMENT NOTIFICATION QUEUE ──
+const achQueue=[];let achShowing=false;
+function showAchievement(a){
+  const di=G.corruption>.5?Math.min(1,a.desc.length-1):0;
+  achQueue.push({name:a.name,desc:a.desc[di],icon:a.icon||'🏆'});
+  if(!achShowing)processAchQueue();
+}
+function processAchQueue(){
+  if(achQueue.length===0){achShowing=false;return}
+  achShowing=true;
+  const{name,desc,icon}=achQueue.shift();
+  const displayIcon=G.corruption>.75?'🌑':G.corruption>.4?'✨':icon;
+  const dur=4;
+  const notif=document.createElement('div');
+  notif.className='ach-notif';
+  notif.innerHTML=`<div class="ach-notif-bar" style="--dur:${dur}s"></div><div class="ach-notif-body"><div class="ach-notif-icon">${displayIcon}</div><div class="ach-notif-text"><div class="ach-notif-label">Achievement Unlocked</div><div class="ach-notif-name">${name}</div><div class="ach-notif-desc">${desc}</div></div></div><button class="ach-notif-close" onclick="dismissAchNotif(this.closest('.ach-notif'))">✕</button>`;
+  document.getElementById('ach-container').appendChild(notif);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>notif.classList.add('visible')));
+  notif._timer=setTimeout(()=>dismissAchNotif(notif),dur*1000);
+}
+function dismissAchNotif(notif){
+  if(!notif||notif._dismissed)return;
+  notif._dismissed=true;clearTimeout(notif._timer);
+  notif.classList.add('hiding');notif.classList.remove('visible');
+  setTimeout(()=>{notif.remove();setTimeout(processAchQueue,200)},350);
+}
+
+// ── NPC ──
+function renderNpcs(){
+  const area=document.getElementById('npc-area');area.innerHTML='';
+  for(const npc of NPCS){
+    if(!npc.req())continue;
+    const el=document.createElement('div');
+    el.className='npc-chip';
+    el.innerHTML=`<span class="npc-icon">${npc.icon}</span><span>${npc.name}</span>`;
+    el.onclick=e=>{e.stopPropagation();showNpcSpeech(npc,e)};
+    area.appendChild(el);
+  }
+}
+function showNpcSpeech(npc,e){
+  const popup=document.getElementById('npc-speech-popup');
+  let best=npc.dialogue[0];
+  for(const [text,thr] of npc.dialogue)if(G.corruption>=thr)best=[text,thr];
+  let txt=best[0];
+  if(npc.id==='ember'&&G.corruption>.75)txt=`This is the ${G.prestigeCount+1} time we have spoken. Approximately.`;
+  if(npc.id==='hoot'&&G.corruption>.9)txt='';
+  document.getElementById('npc-speech-name').textContent=npc.name;
+  document.getElementById('npc-speech-text').textContent=txt;
+  popup.classList.remove('hidden');
+  const rect=e.currentTarget.getBoundingClientRect();
+  popup.style.left=Math.min(rect.left,window.innerWidth-270)+'px';
+  popup.style.top=(rect.top-popup.offsetHeight-10)+'px';
+}
+function closeNpcSpeech(){document.getElementById('npc-speech-popup').classList.add('hidden')}
+
+// ── LORE TOAST ──
+function showLoreToast(msg){
+  const t=document.getElementById('lore-toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// ── CORRUPTION VISUALS ──
+function applyCorruptionEffects(){
+  const c=G.corruption,body=document.body;
+  body.classList.remove('amb-warm','amb-settling','amb-deep','amb-irreversible','amb-terminal','amb-complete');
+  if(c>=.95)body.classList.add('amb-complete');
+  else if(c>=.88)body.classList.add('amb-terminal');
+  else if(c>=.75)body.classList.add('amb-irreversible');
+  else if(c>=.60)body.classList.add('amb-deep');
+  else if(c>=.30)body.classList.add('amb-settling');
+  else if(c>=.15)body.classList.add('amb-warm');
+  if(c>=.88&&document.hidden)document.title='Paw Paw Paradise — still here';
+  else document.title=`Paw Paw Paradise — ${fmt(G.paws)}`;
+  if(c>=.75)document.getElementById('prestige-btn').textContent='✨ Reset';
+}
+
+// ── TAB MODALS ──
+function openTab(tab){
+  document.getElementById('tab-content').classList.add('active');
+  document.getElementById('tab-title').textContent={species:'🐾 Species',ascension:'🔥 Ascension Tree',synergies:'🔗 Synergies',realms:'🌙 Realms',codex:'📖 Codex',achievements:'🏆 Achievements',stats:'📊 Stats'}[tab]||tab;
+  const body=document.getElementById('tab-body');body.innerHTML='';
+  if(tab==='species'){
+    for(const s of SPECIES_DATA){
+      const card=document.createElement('div');
+      const unlocked=G.species[s.id],canBuy=s.req()&&!unlocked;
+      card.className='species-card'+(s.req()?'':' locked');
+      const di=G.corruption>.6?Math.min(2,s.bonusDesc.length-1):G.corruption>.3?Math.min(1,s.bonusDesc.length-1):0;
+      card.innerHTML=`<h3>${s.icon} ${s.name}${unlocked?' ✓':''}</h3><p>${s.bonusDesc[di]}</p><div class="species-bonus">${unlocked?'Active':s.req()?`Unlock: ${fmt(s.cost)} 💖`:`Requires: ${fmt(G.lifetimePaws)} Paws needed`}</div>`;
+      if(canBuy)card.onclick=()=>{unlockSpecies(s.id);openTab('species')};
+      body.appendChild(card);
+    }
+  }
+  else if(tab==='ascension'){
+    const p=document.createElement('p');p.style.cssText='font-size:.8rem;color:var(--muted);font-family:\'Crimson Text\',serif;font-style:italic;margin-bottom:14px;line-height:1.5';
+    p.textContent=`You have ${G.ascensionEnergy} 🔥 Ascension Energy. Earned through prestige. Persists through all resets.`;
+    body.appendChild(p);
+    const grid=document.createElement('div');grid.className='asc-tree-grid';
+    for(const u of UPGRADES.filter(u=>u.type==='ascension')){
+      const node=document.createElement('div');
+      const purchased=G.upgrades[u.id],available=u.req();
+      node.className='asc-node'+(purchased?' purchased':available?'':' locked');
+      node.innerHTML=`<h4>${u.icon} ${u.name}</h4><p>${u.desc[0]}</p><div class="asc-cost">${purchased?'✓ Owned':available?`Cost: ${u.cost} 🔥`:'Locked'}</div>`;
+      if(available&&!purchased)node.onclick=()=>{buyUpgrade(u.id);openTab('ascension')};
+      grid.appendChild(node);
+    }
+    body.appendChild(grid);
+  }
+  else if(tab==='synergies'){
+    body.innerHTML='<p style="font-size:.8rem;color:var(--muted);font-family:\'Crimson Text\',serif;font-style:italic;margin-bottom:14px;line-height:1.5">Synergies activate automatically when their conditions are met. They cannot be purchased.</p>';
+    for(const s of SYNERGIES){
+      const item=document.createElement('div');
+      item.className='synergy-item'+(s.applied?' active':'');
+      item.innerHTML=`<h4>${s.icon} ${s.name} ${s.applied?'<span style="color:var(--soft-green);font-size:.75rem">● ACTIVE</span>':'<span style="color:var(--muted);font-size:.75rem">○ INACTIVE</span>'}</h4><p>${s.desc}</p>`;
+      body.appendChild(item);
+    }
+  }
+  else if(tab==='realms'){
+    for(const r of REALMS){
+      const avail=!r.req||r.req();
+      const card=document.createElement('div');
+      card.className='realm-card'+(avail?'':' locked');
+      const di=G.corruption>.5?1:0;
+      const cur=r.costCurrency||'paws';
+      const sym={paws:'🐾',moonEssence:'🌙',starDust:'⭐'}[cur]||'🐾';
+      const visits=G.unlockedRealms[r.id]||0;
+      card.innerHTML=`<h3>${r.icon} ${r.name} ${visits>0?`<span style="font-size:.7rem;color:var(--muted)">(visited ${visits}×)</span>`:''}</h3><p>${r.desc[Math.min(di,r.desc.length-1)]}</p><div class="realm-reward">${r.reward} · Cost: ${fmt(r.cost)}${sym}</div>`;
+      if(avail)card.onclick=()=>visitRealm(r.id);
+      body.appendChild(card);
+    }
+  }
+  else if(tab==='codex'){
+    body.innerHTML='<p style="font-size:.78rem;color:var(--muted);margin-bottom:14px;font-family:\'Crimson Text\',serif;font-style:italic">Lore of the Paradise. Some entries update themselves.</p>';
+    for(const e of CODEX){
+      if(!e.req())continue;
+      const entry=document.createElement('div');entry.className='codex-entry';
+      const txt=G.corruption>.55?e.late:e.early;
+      entry.innerHTML=`<h4>${e.title}</h4><p>${txt}</p>`;
+      body.appendChild(entry);
+    }
+    if(G.corruption>=.85){
+      const bonus=document.createElement('div');bonus.className='codex-entry';
+      bonus.innerHTML=`<h4>On Continued Play</h4><p>The paws are not being generated. They are being taken. From where, the game does not specify. From what, the game cannot say. The number goes up. This is what was wanted. This is what was designed.<br><br>Isn't it?</p>`;
+      body.appendChild(bonus);
+    }
+  }
+  else if(tab==='achievements'){
+    const grid=document.createElement('div');grid.className='ach-grid';
+    for(const a of ACHIEVEMENTS){
+      const item=document.createElement('div');
+      const di=G.corruption>.5?Math.min(1,a.desc.length-1):0;
+      item.className='ach-item'+(G.achievements[a.id]?'':' locked');
+      item.innerHTML=`<div class="ai-name">${G.achievements[a.id]?(a.icon||'🏆')+' '+a.name:'???'}</div><div class="ai-desc">${G.achievements[a.id]?a.desc[di]:'???'}</div>`;
+      grid.appendChild(item);
+    }
+    body.appendChild(grid);
+    const total=ACHIEVEMENTS.filter(a=>G.achievements[a.id]).length;
+    const pct=document.createElement('p');
+    pct.style.cssText='font-size:.75rem;color:var(--muted);margin-top:12px;text-align:center;font-family:\'Crimson Text\',serif;font-style:italic';
+    pct.textContent=`${total} / ${ACHIEVEMENTS.length} achievements`+(G.corruption>.6?' (all of them count)':'');
+    body.appendChild(pct);
+  }
+  else if(tab==='stats'){
+    const grid=document.createElement('div');grid.className='stats-grid';
+    const stats=[
+      ['Total Paws Generated',fmt(G.lifetimePaws)],
+      ['Current Paws/sec',fmt(G.pps)],
+      ['Total Clicks',fmt(G.totalClicks)],
+      ['Buildings Owned',totalBuildings()],
+      ['Upgrades Purchased',purchasedUpgradeCount()+' / '+UPGRADES.length],
+      ['Species Unlocked',activeSpeciesCount()+' / '+SPECIES_DATA.length],
+      ['Prestige Resets',G.prestigeCount],
+      ['Affection',fmt(G.affection)],
+      ['Fluff',fmt(G.fluff)],
+      ['Moon Essence',fmt(G.moonEssence)],
+      ['Star Dust',fmt(G.starDust)],
+      ['Void Crystals',fmt(G.voidCrystals)],
+      ['Ascension Energy',G.ascensionEnergy],
+      ['Session Time',formatTime(G.sessionTime)],
+      ['Synergies Active',SYNERGIES.filter(s=>s.applied).length+' / '+SYNERGIES.length],
+      ['Realms Visited',Object.keys(G.unlockedRealms).length+' / '+REALMS.length],
+      ['Global Multiplier','×'+fmt(G.globalMultiplier)],
+      ['Prestige Multiplier','×'+fmt(G.prestigeMultiplier)],
+    ];
+    for(const [label,val] of stats){
+      const item=document.createElement('div');item.className='stat-item';
+      item.innerHTML=`<div class="s-label">${label}</div><div class="s-val">${val}</div>`;
+      grid.appendChild(item);
+    }
+    body.appendChild(grid);
+    // Save/load buttons
+    const toolRow=document.createElement('div');
+    toolRow.style.cssText='margin-top:16px;display:flex;gap:8px;flex-wrap:wrap';
+    toolRow.innerHTML=`
+      <button class="tab-btn" style="background:var(--pink-pale);color:var(--pink)" onclick="exportSave()">📤 Export Save</button>
+      <button class="tab-btn" style="background:var(--pink-pale);color:var(--pink)" onclick="importSavePrompt()">📥 Import Save</button>
+      <button class="tab-btn" style="background:rgba(200,50,50,.1);color:#c33" onclick="if(confirm('Hard reset? All progress lost!'))adminHardReset()">🗑️ Hard Reset</button>
+    `;
+    body.appendChild(toolRow);
+    if(G.corruption>=.6){
+      const note=document.createElement('p');
+      note.style.cssText='margin-top:14px;font-size:.73rem;color:var(--muted);font-family:\'Crimson Text\',serif;font-style:italic;line-height:1.5';
+      note.textContent=G.corruption>=.88?'The paradise remembers every session. The paradise has always remembered.':'Some values are not shown here. This is not unusual.';
+      body.appendChild(note);
+    }
+  }
+}
+function closeTab(){document.getElementById('tab-content').classList.remove('active')}
+document.getElementById('tab-content').addEventListener('click',e=>{if(e.target===document.getElementById('tab-content'))closeTab()});
+
+// ── SAVE EXPORT/IMPORT ──
+function exportSave(){
+  const data=localStorage.getItem('pawpaw_save2')||'{}';
+  const encoded=btoa(data);
+  navigator.clipboard.writeText(encoded).then(()=>showLoreToast('Save copied to clipboard!')).catch(()=>{
+    prompt('Copy this save string:',encoded);
+  });
+}
+function importSavePrompt(){
+  const encoded=prompt('Paste your save string:');
+  if(!encoded)return;
+  try{
+    const data=atob(encoded);
+    JSON.parse(data);// validate
+    localStorage.setItem('pawpaw_save2',data);
+    location.reload();
+  }catch(e){showLoreToast('Invalid save data!')}
+}
+
+// ── LOADING SCREEN ──
+function showLoadingScreen(){
+  const overlay=document.getElementById('loading-overlay'),msgEl=document.getElementById('loading-msg');
+  let best=LOAD_MSGS[0];
+  for(const[msg,thr] of LOAD_MSGS)if(G.corruption>=thr)best=[msg,thr];
+  msgEl.textContent=best[0];
+  setTimeout(()=>{overlay.style.opacity='0';setTimeout(()=>overlay.classList.add('hidden'),600)},G.corruption>=.88?2500:1000);
+}
+
+// ── CURRENCY ROW ──
+function renderCurrencyRow(){
+  const row=document.getElementById('currency-row');
+  const chips=[{icon:'💖',val:fmt(G.affection),label:'affection'},{icon:'✨',val:fmt(G.fluff),label:'fluff'}];
+  if(G.moonEssence>0||G.lifetimePaws>=50000000)chips.push({icon:'🌙',val:fmt(G.moonEssence),label:'moon'});
+  if(G.starDust>0||G.buildings['observatory']?.count>0)chips.push({icon:'⭐',val:fmt(G.starDust),label:'stardust'});
+  if(G.voidCrystals>0)chips.push({icon:'💠',val:fmt(G.voidCrystals),label:'void crystals'});
+  if(G.ascensionEnergy>0)chips.push({icon:'🔥',val:fmt(G.ascensionEnergy),label:'ascension'});
+  row.innerHTML=chips.map(c=>`<div class="currency-chip"><span>${c.icon}</span><span class="c-val">${c.val}</span><span class="c-label">${c.label}</span></div>`).join('');
+}
+
+// ── ACTIVE EFFECTS BAR ──
+function updateEffectsBar(){
+  const bar=document.getElementById('active-effects-bar');
+  const effects=[];
+  if(G.realmActive){
+    const r=REALMS.find(r=>r.id===G.realmActive);
+    if(r)effects.push(`${r.icon} ${r.name} (${formatTime(Math.ceil(G.realmTimer))})`);
+  }
+  if(G.foxTrickActive)effects.push(`🦊 Fox Trick ×2 PPS (${Math.ceil(G.foxTrickTimer)}s)`);
+  bar.innerHTML=effects.map(e=>`<div style="padding:3px 10px;background:rgba(179,157,219,.15);border:1px solid rgba(179,157,219,.3);border-radius:12px;font-size:.7rem;font-weight:700;color:var(--purple)">${e}</div>`).join('');
+}
+
+// ── RENDERERS ──
+function renderBuildings(){
+  const list=document.getElementById('buildings-list');list.innerHTML='';
+  for(const b of BUILDINGS){
+    const count=G.buildings[b.id]?.count||0,cost=getBuildingCost(b),canAfford=G.paws>=cost;
+    const di=G.corruption>.5?Math.min(1,b.desc.length-1):0;
+    const row=document.createElement('div');
+    const ppsForThis=count*b.basePps*(b._mult||1)*G.prestigeMultiplier*G.globalMultiplier;
+    row.className='building-row'+(canAfford?'':' cant-afford');
+    row.innerHTML=`<span class="building-icon">${b.icon}</span><div class="building-info"><div class="building-name">${b.name}</div><div class="building-sub">${count} owned · <span class="building-pps">+${fmt(ppsForThis)}/s</span></div><div class="building-desc-text">${b.desc[di]}</div></div><div class="building-cost" style="color:${canAfford?'var(--gold)':'var(--muted)'}">${fmt(cost)}🐾</div>${count>0?`<div class="b-count">${count>99?'99+':count}</div>`:''}`;
+    row.onclick=()=>buyBuilding(b.id);
+    list.appendChild(row);
+  }
+}
+function renderUpgrades(){
+  const list=document.getElementById('upgrades-list');list.innerHTML='';
+  const groups=[
+    {label:'🐾 Clicking',types:['clicking']},
+    {label:'⚙️ Idle / Global',types:['idle']},
+    {label:'🏗️ Building Boosts',types:['building']},
+    {label:'💖 Affection',types:['affection']},
+    {label:'✨ Fluff',types:['fluff']},
+    {label:'🌙 Moon Essence',types:['moon']},
+    {label:'⭐ Star Dust',types:['stardust']},
+    {label:'💠 Void Crystals',types:['void']},
+  ];
+  let anyShown=false;
+  for(const grp of groups){
+    const relevant=UPGRADES.filter(u=>grp.types.includes(u.type)&&(u.req?u.req():true));
+    if(relevant.length===0)continue;
+    const title=document.createElement('div');title.className='panel-title';title.textContent=grp.label;
+    list.appendChild(title);anyShown=true;
+    for(const u of relevant){
+      const btn=document.createElement('button');
+      btn.className='upgrade-btn'+(G.upgrades[u.id]?' purchased':'');
+      const cur=u.costCurrency||'paws';
+      const sym={paws:'🐾',affection:'💖',fluff:'✨',moonEssence:'🌙',starDust:'⭐',voidCrystals:'💠',ascensionEnergy:'🔥'}[cur]||'🐾';
+      const di=G.corruption>.5&&u.desc.length>1?1:0;
+      const displayCost=G._foxDiscount&&cur!=='ascensionEnergy'?u.cost*.85:u.cost;
+      btn.innerHTML=`<span class="upgrade-icon">${u.icon}</span><div class="upgrade-info"><div class="upgrade-name">${u.name}</div><div class="upgrade-cost">${G.upgrades[u.id]?'Purchased':fmt(displayCost)+sym}</div><div class="upgrade-desc">${u.desc[di]||u.desc[0]}</div></div>`;
+      if(!G.upgrades[u.id])btn.onclick=()=>buyUpgrade(u.id);
+      else btn.disabled=true;
+      list.appendChild(btn);
+    }
+  }
+  if(!anyShown){
+    const msg=document.createElement('div');msg.style.cssText='padding:20px;text-align:center;color:var(--muted);font-size:.8rem;font-family:\'Crimson Text\',serif;font-style:italic';
+    msg.textContent='Unlock species and buildings to reveal upgrades.';
+    list.appendChild(msg);
+  }
+}
+
+// ── CENTER MESSAGE ──
+let lastMsg='';
+function updateCenterMessage(){
+  const area=document.getElementById('message-area');
+  let best=CENTER_MSGS[0];
+  for(const[msg,thr] of CENTER_MSGS)if(G.corruption>=thr)best=[msg,thr];
+  if(best[0]!==lastMsg){
+    lastMsg=best[0];
+    area.style.opacity='0';
+    setTimeout(()=>{area.textContent=best[0];area.style.opacity='1'},400);
+  }
+}
+
+// ── KONAMI / ADMIN ──
+const KONAMI=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let konamiIdx=0;
+function setupKonami(){
+  document.addEventListener('keydown',e=>{
+    if(e.key===KONAMI[konamiIdx]){konamiIdx++;if(konamiIdx===KONAMI.length){konamiIdx=0;openAdmin()}}
+    else konamiIdx=0;
+  });
+  // Also: click title logo 7 times
+  let logoClicks=0,logoTimer=null;
+  document.getElementById('title-logo').addEventListener('click',()=>{
+    logoClicks++;clearTimeout(logoTimer);
+    logoTimer=setTimeout(()=>logoClicks=0,1500);
+    if(logoClicks>=7){logoClicks=0;openAdmin()}
+  });
+}
+function openAdmin(){document.getElementById('admin-panel').classList.add('active')}
+function closeAdmin(){document.getElementById('admin-panel').classList.remove('active')}
+function adminAdd(key){
+  const val=parseFloat(document.getElementById('adm-'+key).value)||0;
+  if(key==='paws'){addPaws(val)}
+  else G[key]=(G[key]||0)+val;
+  showLoreToast(`+${fmt(val)} ${key}!`);
+  saveGame();
+}
+function adminPpsMult(){
+  const m=parseFloat(document.getElementById('adm-ppsmult').value)||1;
+  multAllBuildings(m);showLoreToast(`PPS ×${m} applied!`);saveGame();
+}
+function adminUnlockAll(){
+  for(const s of SPECIES_DATA)G.species[s.id]=true;
+  renderNpcs();renderUpgrades();checkSynergies();checkAchievements();saveGame();
+  showLoreToast('All species unlocked!');
+}
+function adminMaxBuildings(){
+  for(const b of BUILDINGS)G.buildings[b.id].count+=50;
+  G.corruption=Math.min(1,G.corruption+.05);
+  checkSynergies();recalcPps();renderBuildings();renderUpgrades();checkAchievements();saveGame();
+  showLoreToast('+50 all buildings!');
+}
+function adminAllUpgrades(){
+  for(const u of UPGRADES.filter(u=>u.type!=='ascension')){
+    if(!G.upgrades[u.id]){G.upgrades[u.id]=true;try{u.effect()}catch(e){}}
+  }
+  checkSynergies();recalcPps();renderUpgrades();checkAchievements();saveGame();
+  showLoreToast('All upgrades purchased!');
+}
+function adminAllRealms(){
+  for(const r of REALMS)G.unlockedRealms[r.id]=(G.unlockedRealms[r.id]||0)+1;
+  checkAchievements();saveGame();showLoreToast('All realms unlocked in history!');
+}
+function adminPrestige(){
+  G.prestigeCount++;G.ascensionEnergy+=10;
+  G.prestigeMultiplier*=2;saveGame();
+  showLoreToast(`Prestige now: ${G.prestigeCount}`);
+}
+function adminWipeCorruption(){G.corruption=0;document.body.className='';saveGame();showLoreToast('Corruption reset to 0.')}
+function adminHardReset(){
+  localStorage.removeItem('pawpaw_save2');location.reload();
+}
+
+// ── GAME LOOP ──
+let lastTick=Date.now(),saveTimer=0,msgTimer=0,corrTimer=0,renderTimer=0;
+function startGameLoop(){requestAnimationFrame(gameLoop)}
+function gameLoop(){
+  const now=Date.now(),dt=Math.min((now-lastTick)/1000,.5);lastTick=now;
+  G.sessionTime+=dt;saveTimer+=dt;msgTimer+=dt;corrTimer+=dt;renderTimer+=dt;
+  // PPS
+  if(G.pps>0)addPaws(G.pps*dt);
+  // secondary currencies
+  G.affection+=G.affGenRate*dt/60;
+  G.fluff+=G.fluffGenRate*dt/60;
+  G.moonEssence+=G.moonGenRate*dt/60;
+  G.starDust+=G.starDustGenRate*dt/60;
+  if(G._voidCrystalGen)G.voidCrystals+=.02*dt;
+  // species passives
+  if(G.species['cats'])G.affection+=(G.buildings['burrow']?.count||0)*.016*dt;
+  if(G.species['wolves'])G.fluff+=(G.buildings['wolfden']?.count||0)*.016*dt;
+  if(G.species['owls'])G.moonEssence+=.05*dt;
+  if(G.species['deer']){multBuilding('garden',1);multBuilding('grove',1)}// tiny boost passively
+  if(G.species['dragons'])G.moonEssence+=(G.buildings['dragonlair']?.count||0)*.008*dt;
+  if(G.buildings['shrine']?.count>0)G.moonEssence+=(G.buildings['shrine'].count)*.004*dt;
+  if(G.buildings['observatory']?.count>0)G.starDust+=(G.buildings['observatory'].count)*.002*dt;
+  if(G.buildings['crystalcave']?.count>0)G.starDust+=(G.buildings['crystalcave'].count)*.003*dt;
+  // fox trick timer
+  if(G.foxTrickActive){G.foxTrickTimer-=dt;if(G.foxTrickTimer<=0){G.foxTrickActive=false;recalcPps()}}
+  // idle corruption
+  if(now-G.lastActive>5000){G.idleMinutes+=dt/60;G.corruption=Math.min(1,G.corruption+.00005*dt)}
+  // realm timer
+  if(G.realmTimer>0){
+    G.realmTimer-=dt;
+    if(G.realmTimer<=0){G.realmTimer=0;G.realmBonus=1;G.realmActive=null;recalcPps();document.getElementById('realm-overlay').classList.remove('active')}
+    document.getElementById('realm-ol-time').textContent='Remaining: '+formatTime(Math.ceil(G.realmTimer));
+  }
+  // combo timer
+  if(G.comboTimer>0){G.comboTimer-=dt;if(G.comboTimer<=0&&G.combo>1){G.combo=1;G.comboTimer=0}}
+  const fill=Math.max(0,G.comboTimer/G.comboMax);
+  document.getElementById('combo-timer-fill').style.width=(fill*100)+'%';
+  const comboMult=G.combo>=200?50:G.combo>=100?25:G.combo>=50?10:G.combo>=20?5:G.combo>=10?2:1;
+  document.getElementById('combo-value').textContent='×'+G.combo;
+  document.getElementById('combo-bonus-label').textContent=G.combo>=10?'(×'+comboMult+' clicks)':'';
+  // prestige button
+  const pBtn=document.getElementById('prestige-btn');
+  if(G.paws>=1000000||(G.prestigeCount>0&&G.paws>=10000))pBtn.style.display='block';
+  // main displays
+  document.getElementById('paw-count').textContent=fmt(G.paws)+' 🐾';
+  document.getElementById('pps-display').textContent=fmt(G.pps)+' paws per second';
+  document.getElementById('stat-pps').textContent=fmt(G.pps)+'/s';
+  document.getElementById('stat-prestige').textContent=G.prestigeCount;
+  document.getElementById('stat-aff').textContent=fmt(G.affection);
+  document.getElementById('stat-fluff').textContent=fmt(G.fluff);
+  if(renderTimer>0.5){renderTimer=0;renderCurrencyRow();updateEffectsBar()}
+  if(msgTimer>10){msgTimer=0;updateCenterMessage()}
+  if(corrTimer>2){corrTimer=0;applyCorruptionEffects();renderUpgrades();renderBuildings();checkAchievements();checkSynergies()}
+  if(saveTimer>20){saveTimer=0;saveGame()}
+  requestAnimationFrame(gameLoop);
+}
+
+// ── START ──
+init();
+</script>
+</body>
+</html>
